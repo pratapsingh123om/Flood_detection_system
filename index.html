@@ -20,7 +20,7 @@
     </style>
 </head>
 <body class="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0b1329] to-black text-slate-100 min-h-screen font-sans antialiased">
-    
+
     <!-- Top Navigation Bar -->
     <nav class="border-b border-slate-800/80 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
@@ -31,7 +31,6 @@
             <div class="flex items-center gap-4 text-xs font-semibold">
                 <a href="#metrics" class="text-slate-400 hover:text-white transition">Live Evaluation</a>
                 <a href="#methodology" class="text-slate-400 hover:text-white transition">Architecture</a>
-                <a href="#history" class="text-slate-400 hover:text-white transition">Progression Log</a>
                 <span class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Pipeline Sync Active
                 </span>
@@ -39,9 +38,9 @@
         </div>
     </nav>
 
-    <div class="max-w-6xl mx-auto px-6 py-10 space-y-16">
-        
-        <!-- HERO SECTION (PRODUCT LANDING PAGE) -->
+    <div class="max-w-6xl mx-auto px-6 py-10 space-y-12">
+
+        <!-- HERO SECTION -->
         <section class="text-center space-y-6 max-w-4xl mx-auto pt-4">
             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-semibold tracking-wider uppercase">
                 Bachelor's Thesis Project • Civil Engineering & AI
@@ -49,12 +48,9 @@
             <h1 class="text-5xl font-black tracking-tight text-white leading-tight">
                 Predicting Extreme Hydrological Monsoons with <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 glow-cyan">Attention Embeddings</span>
             </h1>
-            <p class="text-slate-400 text-base leading-relaxed max-w-2xl mx-auto font-normal">
-                An end-to-end deep learning framework combining temporal sequence modeling with custom asymmetric optimization to overcome peak-damping in extreme rainfall prediction.
-            </p>
         </section>
 
-        <!-- DASHBOARD SECTION: LIVE REAL METRICS -->
+        <!-- LIVE METRICS -->
         <section id="metrics" class="space-y-6">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h2 class="text-xl font-black text-white flex items-center gap-2">
@@ -64,96 +60,67 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <!-- Real Current Peak -->
                 <div class="glass-card p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 transition-all">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Predicted Max Peak</span>
-                    <div class="text-4xl font-black text-cyan-400 mt-2 tracking-tight glow-cyan">80.92 <span class="text-sm font-normal text-slate-500">mm</span></div>
-                    <div class="mt-2 text-[11px] text-slate-400">Actual Target: <span class="text-amber-400 font-bold">143.3 mm</span></div>
+                    <div class="text-4xl font-black text-cyan-400 mt-2 tracking-tight glow-cyan">76.43 <span class="text-sm font-normal text-slate-500">mm</span></div>
                 </div>
 
-                <!-- Real CSI -->
                 <div class="glass-card p-6 rounded-2xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Critical Success Index (CSI)</span>
-                    <div class="text-4xl font-black text-emerald-400 mt-2 tracking-tight glow-emerald">0.379</div>
-                    <div class="mt-2 text-[11px] text-slate-400">Hit Rate (POD): <span class="text-white font-bold">0.762</span></div>
+                    <div class="text-4xl font-black text-emerald-400 mt-2 tracking-tight glow-emerald">0.352</div>
                 </div>
 
-                <!-- Real Heavy RMSE -->
+                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group hover:border-blue-500/40 transition-all">
+                    <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Hit Rate (POD)</span>
+                    <div class="text-4xl font-black text-blue-400 mt-2 tracking-tight">0.827</div>
+                </div>
+
                 <div class="glass-card p-6 rounded-2xl relative overflow-hidden group hover:border-rose-500/40 transition-all">
-                    <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Heavy Rain RMSE</span>
-                    <div class="text-4xl font-black text-rose-400 mt-2 tracking-tight">24.88 <span class="text-sm font-normal text-slate-500">mm</span></div>
-                    <div class="mt-2 text-[11px] text-slate-400">Evaluated on events > 15mm</div>
-                </div>
-
-                <!-- Real False Alarm Ratio -->
-                <div class="glass-card p-6 rounded-2xl relative overflow-hidden group hover:border-amber-500/40 transition-all">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">False Alarm Ratio (FAR)</span>
-                    <div class="text-4xl font-black text-amber-400 mt-2 tracking-tight">0.57</div>
-                    <div class="mt-2 text-[11px] text-slate-400">Lower is better (↓)</div>
+                    <div class="text-4xl font-black text-rose-400 mt-2 tracking-tight">0.62</div>
                 </div>
             </div>
 
-            <!-- DYNAMIC HISTORICAL CHART -->
-            <div class="glass-card p-6 rounded-2xl space-y-4">
-                <div class="flex items-center justify-between">
+            <!-- DYNAMIC CHARTS (DUAL GRID) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Chart 1: Peaks and RMSE -->
+                <div class="glass-card p-6 rounded-2xl space-y-4">
                     <div>
-                        <h3 class="text-base font-bold text-white">Extrapolation & Peak Progression Chart</h3>
-                        <p class="text-xs text-slate-400">Real-time log tracking peak capacity growth across pipeline iterations</p>
+                        <h3 class="text-base font-bold text-white">Extrapolation Progression (mm)</h3>
+                        <p class="text-xs text-slate-400">Tracking predicted peaks vs ground truth</p>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="peakChart"></canvas>
                     </div>
                 </div>
-                <div class="relative h-72 w-full">
-                    <canvas id="progressionChart"></canvas>
-                </div>
-            </div>
-        </section>
 
-        <!-- METHODOLOGY & ARCHITECTURE (PRODUCT DETAIL) -->
-        <section id="methodology" class="space-y-6">
-            <div class="border-b border-slate-800 pb-3">
-                <h2 class="text-xl font-black text-white">System Architecture & Methodology</h2>
-                <p class="text-xs text-slate-400 mt-1">Detailed breakdown of the dual-stage hybrid engineering pipeline</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-2 border-t-cyan-500">
-                    <div class="text-cyan-400 font-bold text-xs uppercase tracking-wider">Phase 1</div>
-                    <h3 class="text-lg font-bold text-white">Feature Processing & Windowing</h3>
-                    <p class="text-xs text-slate-400 leading-relaxed">
-                        Raw meteorological variables (temperature, humidity, radiation, wind) are scaled and converted into a 7-day sliding lookback tensor ($X \in \mathbb{R}^{B 	imes 7 	imes D}$) to preserve temporal continuity.
-                    </p>
-                </div>
-
-                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-2 border-t-blue-500">
-                    <div class="text-blue-400 font-bold text-xs uppercase tracking-wider">Phase 2</div>
-                    <h3 class="text-lg font-bold text-white">Multi-Head Attention Extraction</h3>
-                    <p class="text-xs text-slate-400 leading-relaxed">
-                        An Attention-LSTM extracts 32-dimensional spatial-temporal embeddings. Parallel attention heads capture immediate rainfall triggers alongside mid-week moisture accumulation.
-                    </p>
-                </div>
-
-                <div class="glass-card p-6 rounded-2xl space-y-3 border-t-2 border-t-indigo-500">
-                    <div class="text-indigo-400 font-bold text-xs uppercase tracking-wider">Phase 3</div>
-                    <h3 class="text-lg font-bold text-white">Asymmetric XGBoost Regression</h3>
-                    <p class="text-xs text-slate-400 leading-relaxed">
-                        Extracted deep embeddings are passed to a tree-based gradient boosted regressor optimized with a custom asymmetric loss function, penalizing underpredicted peak floods 3x harder.
-                    </p>
+                <!-- Chart 2: Contingency Metrics (POD, FAR, CSI) -->
+                <div class="glass-card p-6 rounded-2xl space-y-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white">Contingency Metrics Progression</h3>
+                        <p class="text-xs text-slate-400">Tracking Hit Rates vs False Alarms</p>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="contingencyChart"></canvas>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- PROGRESSION HISTORY TABLE -->
-        <section id="history" class="glass-card rounded-2xl overflow-hidden">
+        <section class="glass-card rounded-2xl overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-800 bg-slate-900/40">
                 <h3 class="font-bold text-white text-sm">Pipeline Progression Audit Log</h3>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs text-slate-300">
+                <table class="w-full text-left text-xs text-slate-300 whitespace-nowrap">
                     <thead class="bg-slate-950/60 uppercase text-slate-400 font-semibold border-b border-slate-800">
                         <tr>
-                            <th class="px-6 py-3">Run ID</th>
-                            <th class="px-6 py-3">Predicted Peak (mm)</th>
+                            <th class="px-6 py-3">Architecture Method</th>
+                            <th class="px-6 py-3">Peak (mm)</th>
                             <th class="px-6 py-3">CSI Score</th>
-                            <th class="px-6 py-3">Heavy RMSE</th>
+                            <th class="px-6 py-3">Hit Rate (POD)</th>
+                            <th class="px-6 py-3">False Alarm (FAR)</th>
                         </tr>
                     </thead>
                     <tbody id="historyTableBody" class="divide-y divide-slate-800/50">
@@ -163,15 +130,11 @@
             </div>
         </section>
 
-        <footer class="text-center text-xs text-slate-600 border-t border-slate-800/60 pt-6">
-            HydroGuard AI • Developed for Bachelor's Thesis Evaluation • Groundwater & Civil Engineering Focus
-        </footer>
-
     </div>
 
     <!-- Chart & Table Injection Script -->
     <script>
-        const historyData = [{"run": "XGB Baseline", "peak": 42.35, "rmse": 29.25, "csi": 0.349}, {"run": "K-Means Split", "peak": 48.71, "rmse": 25.58, "csi": 0.373}, {"run": "Run #3", "peak": 64.17, "rmse": 23.84, "csi": 0.374, "pod": 0.76, "far": 0.577}, {"run": "Run #4", "peak": 80.92, "rmse": 24.88, "csi": 0.379, "pod": 0.762, "far": 0.57}];
+        const historyData = [{"run": "XGB Baseline", "peak": 63.92, "rmse": 27.3, "csi": 0.372, "pod": 0.627, "far": 0.522}, {"run": "K-Means Split", "peak": 48.71, "rmse": 25.58, "csi": 0.373, "pod": 0.65, "far": 0.51}, {"run": "mRMR Feature Pruning", "peak": 40.94, "rmse": 25.97, "csi": 0.363, "pod": 0.615, "far": 0.53}, {"run": "Antecedent Moisture", "peak": 77.58, "rmse": 24.45, "csi": 0.383, "pod": 0.763, "far": 0.565}, {"run": "Log-Transform Target", "peak": 53.2, "rmse": 25.81, "csi": 0.367, "pod": 0.62, "far": 0.53}, {"run": "Bias-Targeted Residuals", "peak": 69.1, "rmse": 24.95, "csi": 0.378, "pod": 0.791, "far": 0.579}, {"run": "EVT Quantile + Temp Scaling", "peak": 80.73, "rmse": 25.42, "csi": 0.3665, "pod": 0.845, "far": 0.621}, {"run": " Hybrid (Standard Asymmetric)", "peak": 85.73, "rmse": 25.42, "csi": 0.385, "pod": 0.772, "far": 0.566}, {"run": "Run 9: Hybrid (Standard Asymmetric)", "peak": 85.73, "rmse": 25.42, "csi": 0.385, "pod": 0.772, "far": 0.566}, {"run": "Run 10: Hybrid (Standard Asymmetric)", "peak": 95.98, "rmse": 23.75, "csi": 0.357, "pod": 0.819, "far": 0.612}, {"run": "Run 11: Hybrid (Standard Asymmetric)", "peak": 82.97, "rmse": 22.05, "csi": 0.361, "pod": 0.855, "far": 0.615}, {"run": "Run 12: Hybrid (Standard Asymmetric)", "peak": 157.89, "rmse": 23.8, "csi": 0.361, "pod": 0.883, "far": 0.621}, {"run": "Run 13: Hybrid (Standard Asymmetric)", "peak": 76.42, "rmse": 23.09, "csi": 0.354, "pod": 0.826, "far": 0.617}, {"run": "Run 14: Hybrid (Standard Asymmetric)", "peak": 76.43, "rmse": 23.12, "csi": 0.353, "pod": 0.827, "far": 0.619}, {"run": "Run 15: Hybrid (Standard Asymmetric)", "peak": 76.43, "rmse": 23.06, "csi": 0.352, "pod": 0.827, "far": 0.62}];
         const actualPeak = 143.29619;
 
         // Populate Table
@@ -183,18 +146,29 @@
                 <td class="px-6 py-3 font-medium">${row.run}</td>
                 <td class="px-6 py-3">${row.peak} mm</td>
                 <td class="px-6 py-3">${row.csi}</td>
-                <td class="px-6 py-3">${row.rmse} mm</td>
+                <td class="px-6 py-3">${row.pod}</td>
+                <td class="px-6 py-3">${row.far}</td>
             `;
             tbody.appendChild(tr);
         });
 
-        // Render Chart
-        const ctx = document.getElementById('progressionChart').getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(34, 211, 238, 0.25)');
-        gradient.addColorStop(1, 'rgba(34, 211, 238, 0)');
+        // Common Chart Options
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+            scales: {
+                x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45, font: {size: 9} } }
+            }
+        };
 
-        new Chart(ctx, {
+        // Render Chart 1: Peaks
+        const ctxPeak = document.getElementById('peakChart').getContext('2d');
+        const gradientPeak = ctxPeak.createLinearGradient(0, 0, 0, 300);
+        gradientPeak.addColorStop(0, 'rgba(34, 211, 238, 0.25)');
+        gradientPeak.addColorStop(1, 'rgba(34, 211, 238, 0)');
+
+        new Chart(ctxPeak, {
             type: 'line',
             data: {
                 labels: historyData.map(d => d.run),
@@ -203,32 +177,76 @@
                         label: 'Predicted Peak (mm)',
                         data: historyData.map(d => d.peak),
                         borderColor: '#22d3ee',
-                        backgroundColor: gradient,
-                        borderWidth: 3,
+                        backgroundColor: gradientPeak,
+                        borderWidth: 2,
                         pointBackgroundColor: '#0b1329',
                         pointBorderColor: '#22d3ee',
-                        pointRadius: 5,
+                        pointRadius: 4,
                         fill: true,
                         tension: 0.3
                     },
                     {
-                        label: `Ground Truth Peak (${actualPeak.toFixed(1)} mm)`,
+                        label: `Target Peak (${actualPeak.toFixed(1)} mm)`,
                         data: Array(historyData.length).fill(actualPeak),
                         borderColor: '#f59e0b',
-                        borderWidth: 2,
-                        borderDash: [6, 6],
+                        borderWidth: 1.5,
+                        borderDash: [4, 4],
                         pointRadius: 0,
                         fill: false
                     }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+                ...commonOptions,
                 scales: {
-                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                    ...commonOptions.scales,
                     y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, min: 0, max: 160 }
+                }
+            }
+        });
+
+        // Render Chart 2: Contingency Metrics (POD, FAR, CSI)
+        const ctxContingency = document.getElementById('contingencyChart').getContext('2d');
+
+        new Chart(ctxContingency, {
+            type: 'line',
+            data: {
+                labels: historyData.map(d => d.run),
+                datasets: [
+                    {
+                        label: 'Hit Rate (POD) ↑',
+                        data: historyData.map(d => d.pod),
+                        borderColor: '#3b82f6', // Blue
+                        borderWidth: 2,
+                        pointBackgroundColor: '#0b1329',
+                        pointRadius: 4,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'False Alarm (FAR) ↓',
+                        data: historyData.map(d => d.far),
+                        borderColor: '#f43f5e', // Rose/Red
+                        borderWidth: 2,
+                        pointBackgroundColor: '#0b1329',
+                        pointRadius: 4,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Success Index (CSI) ↑',
+                        data: historyData.map(d => d.csi),
+                        borderColor: '#10b981', // Emerald/Green
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 4,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    ...commonOptions.scales,
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, min: 0.2, max: 0.9 }
                 }
             }
         });
