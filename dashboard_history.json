@@ -1,122 +1,15 @@
-[
-  {
-    "run": "XGB Baseline",
-    "peak": 63.92,
-    "rmse": 27.3,
-    "csi": 0.372,
-    "pod": 0.627,
-    "far": 0.522
-  },
-  {
-    "run": "K-Means Split",
-    "peak": 48.71,
-    "rmse": 25.58,
-    "csi": 0.373,
-    "pod": 0.65,
-    "far": 0.51
-  },
-  {
-    "run": "mRMR Feature Pruning",
-    "peak": 40.94,
-    "rmse": 25.97,
-    "csi": 0.363,
-    "pod": 0.615,
-    "far": 0.53
-  },
-  {
-    "run": "Antecedent Moisture",
-    "peak": 77.58,
-    "rmse": 24.45,
-    "csi": 0.383,
-    "pod": 0.763,
-    "far": 0.565
-  },
-  {
-    "run": "Log-Transform Target",
-    "peak": 53.2,
-    "rmse": 25.81,
-    "csi": 0.367,
-    "pod": 0.62,
-    "far": 0.53
-  },
-  {
-    "run": "Bias-Targeted Residuals",
-    "peak": 69.1,
-    "rmse": 24.95,
-    "csi": 0.378,
-    "pod": 0.791,
-    "far": 0.579
-  },
-  {
-    "run": "EVT Quantile + Temp Scaling",
-    "peak": 80.73,
-    "rmse": 25.42,
-    "csi": 0.3665,
-    "pod": 0.845,
-    "far": 0.621
-  },
-  {
-    "run": " Hybrid (Standard Asymmetric)",
-    "peak": 85.73,
-    "rmse": 25.42,
-    "csi": 0.385,
-    "pod": 0.772,
-    "far": 0.566
-  },
-  {
-    "run": "Run 9: Hybrid (Standard Asymmetric)",
-    "peak": 85.73,
-    "rmse": 25.42,
-    "csi": 0.385,
-    "pod": 0.772,
-    "far": 0.566
-  },
-  {
-    "run": "Run 10: Hybrid (Standard Asymmetric)",
-    "peak": 95.98,
-    "rmse": 23.75,
-    "csi": 0.357,
-    "pod": 0.819,
-    "far": 0.612
-  },
-  {
-    "run": "Run 11: Hybrid (Standard Asymmetric)",
-    "peak": 82.97,
-    "rmse": 22.05,
-    "csi": 0.361,
-    "pod": 0.855,
-    "far": 0.615
-  },
-  {
-    "run": "Run 12: Hybrid (Standard Asymmetric)",
-    "peak": 157.89,
-    "rmse": 23.8,
-    "csi": 0.361,
-    "pod": 0.883,
-    "far": 0.621
-  },
-  {
-    "run": "Run 13: Hybrid (Standard Asymmetric)",
-    "peak": 76.42,
-    "rmse": 23.09,
-    "csi": 0.354,
-    "pod": 0.826,
-    "far": 0.617
-  },
-  {
-    "run": "Run 14: Hybrid (Standard Asymmetric)",
-    "peak": 76.43,
-    "rmse": 23.12,
-    "csi": 0.353,
-    "pod": 0.827,
-    "far": 0.619
-  },
-  {
-    "run": "Run 15: Hybrid (Standard Asymmetric)",
-    "peak": 76.43,
-    "rmse": 23.06,
-    "csi": 0.352,
-    "pod": 0.827,
-    "far": 0.62
-  }
-]
+{
+    "project_name": "Indore Rainfall Prediction Model",
+    "last_updated": "2026-08-10 13:52:33",
+    "models": {
+        "Tuned Asymmetric Hybrid": {
+            "description": "1.8x Penalty on >25mm missed events",
+            "metrics": {
+                "RMSE": 6.3636,
+                "MAE": 1.8911,
+                "CSI": 0.7952,
+                "Extreme_CSI": 0.3611
+            }
+        }
+    }
+}
