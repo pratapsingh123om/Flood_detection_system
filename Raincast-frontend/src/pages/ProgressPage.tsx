@@ -15,90 +15,56 @@ const C = {
 
 const changelog = [
   {
-    version: 'v2.4.0',
-    date: '2024-11-18',
-    tag: 'Major Release',
-    tagColor: C.cyan,
-    added: [
-      'Attention-LSTM with temporal self-attention for 12-month horizon forecasting',
-      'Real-time satellite feed integration (INSAT-3DR + Sentinel-1)',
-      'Geospatial heatmap overlay with district-level risk granularity',
-    ],
-    why: 'Standard LSTM lacked the ability to weigh historical flood events non-uniformly. The attention mechanism allows the model to focus on analogous historical monsoon patterns regardless of how far back they occurred.',
-    improved: [
-      { label: 'Prediction Accuracy', from: '81.2%', to: '94.1%', delta: '+12.9%' },
-      { label: 'Extreme Event POD', from: '0.71', to: '0.947', delta: '+0.237' },
-      { label: 'Forecast Horizon', from: '30 days', to: '12 months', delta: '12×' },
-    ],
-  },
-  {
-    version: 'v2.3.1',
-    date: '2024-10-05',
-    tag: 'Model Update',
+    version: 'v1.3.0',
+    date: '2026-08-12',
+    tag: 'Feature',
     tagColor: C.purple,
     added: [
-      'XGBoost ensemble layer for short-range (0–72hr) event classification',
-      'Adaptive threshold calibration based on regional drainage coefficients',
-      'Multi-model confidence intervals on all outputs',
+      'Autoregressive 30-Day Future Forecasting Engine',
+      'OpenMeteo Baseline 16-Day API Integration',
+      'Dynamic Metric Calculation (Accuracy, CSI, POD, FAR, RMSE, MAE)',
     ],
-    why: 'LSTM performs well at trend forecasting but underperforms on sudden high-magnitude events. XGBoost captures feature interactions for acute rainfall-runoff dynamics that deep networks smooth over.',
+    why: 'We needed true predictive capabilities beyond historical test evaluation. The autoregressive loop feeds predictions back into the model to predict 30 days ahead without exogenous variables, while OpenMeteo provides a baseline comparison.',
     improved: [
-      { label: 'FAR (False Alarm Rate)', from: '0.231', to: '0.082', delta: '-64.5%' },
-      { label: 'Extreme FAR', from: '0.312', to: '0.113', delta: '-63.8%' },
-      { label: 'CSI Score', from: '0.69', to: '0.871', delta: '+0.181' },
+      { label: 'Forecast Horizon', from: 'Past Evaluation', to: '30 Days Future', delta: 'New' },
+      { label: 'Metric Fidelity', from: 'Hardcoded UI', to: 'Dynamic from Test Set', delta: 'Live' },
+      { label: 'External Validation', from: 'None', to: 'OpenMeteo Overlay', delta: 'Added' },
     ],
   },
   {
-    version: 'v2.2.0',
-    date: '2024-08-22',
-    tag: 'Data Pipeline',
+    version: 'v1.2.0',
+    date: '2026-08-11',
+    tag: 'Model Update',
+    tagColor: C.cyan,
+    added: [
+      'Upgraded Extreme Hybrid Pipeline (Default Model)',
+      'Physics Gated Quantile Pipeline & Two-Stage Hybrid',
+      'XGBoost, RandomForest, LightGBM & CatBoost Base Models',
+    ],
+    why: 'Single models struggle with extreme rainfall events. The Upgraded Extreme Hybrid pipeline combines classifiers and regressors to filter out noise, achieving the highest Extreme CSI score in our evaluation suite.',
+    improved: [
+      { label: 'Extreme CSI Score', from: '0.316 (Two-Stage)', to: '0.361 (Upgraded Hybrid)', delta: '+14.2%' },
+      { label: 'False Alarm Rate (FAR)', from: '0.518 (XGBoost)', to: '0.125 (Upgraded Hybrid)', delta: '-75.8%' },
+      { label: 'Critical Success Index', from: '0.480 (XGBoost)', to: '0.814 (Upgraded Hybrid)', delta: '+69.5%' },
+    ],
+  },
+  {
+    version: 'v1.1.0',
+    date: '2026-08-10',
+    tag: 'UI/UX & Map',
     tagColor: C.green,
     added: [
-      'Spatiotemporal data fusion: IMD gridded rainfall + CWC discharge + SRTM elevation',
-      'Automated runoff coefficient estimation using soil moisture index',
-      'Catchment delineation from 30m DEM with GIS topology validation',
+      'Dynamic Model Discovery API (/api/models)',
+      'Live React-Leaflet Map Integration with Nominatim Geocoding',
+      'Pending States for Hydrological Parameters & Risk Zones',
     ],
-    why: 'Single-source rainfall data failed to capture the complex interplay between upstream discharge, soil saturation state, and morphological factors. A fused multi-source pipeline reduces input uncertainty by 38%.',
+    why: 'The dashboard needed to be tied directly to backend ML capabilities rather than static mockups. The new map visually represents predicted rainfall intensity, and the model dropdown dynamically scans the models/ folder.',
     improved: [
-      { label: 'Input Feature Set', from: '6 variables', to: '14 variables', delta: '+8 sources' },
-      { label: 'Spatial Resolution', from: '25km grid', to: '5km grid', delta: '5× finer' },
-      { label: 'Data Latency', from: '6 hours', to: '45 minutes', delta: '−87.5%' },
+      { label: 'Map Tech', from: 'Static CSS', to: 'React-Leaflet', delta: 'Interactive' },
+      { label: 'Model Selection', from: 'Hardcoded', to: 'Dynamic Directory Scan', delta: 'Automated' },
+      { label: 'UI Accuracy', from: 'Fake Sliders', to: 'Pending States', delta: 'Honest' },
     ],
-  },
-  {
-    version: 'v2.1.0',
-    date: '2024-06-10',
-    tag: 'Infrastructure',
-    tagColor: C.amber,
-    added: [
-      'Streaming data ingestion pipeline with Apache Kafka integration',
-      'Progress log and changelog system (this page)',
-      'REST API v2 for downstream emergency management system integrations',
-    ],
-    why: 'Batch processing introduced 6-hour forecast lags which made the system useless for early warning. Streaming architecture brings alert latency below 5 minutes from rainfall event onset.',
-    improved: [
-      { label: 'Alert Latency', from: '6 hours', to: '<5 min', delta: '−98.6%' },
-      { label: 'System Uptime', from: '91.2%', to: '99.7%', delta: '+8.5pp' },
-      { label: 'API Response Time', from: '1.8s', to: '120ms', delta: '−93.3%' },
-    ],
-  },
-  {
-    version: 'v2.0.0',
-    date: '2024-03-01',
-    tag: 'Foundation',
-    tagColor: C.dim,
-    added: [
-      'Core LSTM architecture trained on 30 years of Narmada basin historical data',
-      'Initial dashboard UI with static map and forecast chart',
-      'Batch model inference with daily update cycle',
-    ],
-    why: 'Initial proof-of-concept validated that deep learning outperforms traditional hydrological simulation (HEC-RAS, SWAT) on held-out extreme event test sets, justifying continued investment.',
-    improved: [
-      { label: 'vs. HEC-RAS (POD)', from: '0.62', to: '0.81', delta: '+0.19' },
-      { label: 'vs. SWAT (CSI)', from: '0.54', to: '0.69', delta: '+0.15' },
-      { label: 'Setup Time', from: '3 weeks', to: '< 1 day', delta: '20× faster' },
-    ],
-  },
+  }
 ]
 
 export default function ProgressPage() {
