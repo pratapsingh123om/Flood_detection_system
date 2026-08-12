@@ -1,0 +1,72 @@
+FOUND TARGET FUNCTION in cell:
+# ==============================================================================
+# BLOCK 3: MODEL TRAINING & METRICS TRACKER
+# ==============================================================================
+from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix
+from lightgbm import LGBMClassifier, LGBMRegressor
+
+# Initialize Global Tracker for the Dashboard
+history_tracker = {
+    "project_name": "Indore Rainfall Prediction Model",
+    "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    "models": {}
+}
+
+def compute_metrics(y_true, y_pred):
+    # Standard Rain (>0.1mm)
+    cm = confusion_matrix((y_true > 0.1).astype(int), (y_pred > 0.1).astype(int), labels=[0, 1])
+    tp = cm[1,1]; fp = cm[0,1]; fn = cm[1,0]
+    csi = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else 0.0
+
+    # Extreme Rain (>30mm)
+    cm_ext = confusion_matrix((y_true > 30.0).astype(int), (y_pred > 30.0).astype(int), labels=[0, 1])
+    e_tp = cm_ext[1,1]; e_fp = cm_ext[0,1]; e_fn = cm_ext[1,0]
+    ext_csi = e_tp / (e_tp + e_fp + e_fn) if (e_tp + e_fp + e_fn) > 0 else 0.0
+
+    return {
+        "RMSE": round(np.sqrt(mean_squared_error(y_true, y_pred)), 4),
+        "MAE": round(mean_absolute_error(y_true, y_pred), 4),
+        "CSI": round(csi, 4),
+        "Extreme_CSI": round(ext_csi, 4)
+    }
+
+def log_model_to_tracker(model_name, description, y_true, y_pred):
+    metrics = compute_metrics(y_true, y_pred)
+    history_tracker["models"][model_name] = {
+        "description": description,
+        "metrics": metrics
+    }
+    print(f"📊 Logged {model_name} -> RMSE: {metrics['RMSE']}, Ext_CSI: {metrics['Extreme_CSI']}")
+
+# ------------------------------------------------------------------------------
+# Train Best Model: Tuned Asymmetric Hybrid
+# ------------------------------------------------------------------------------
+print("\n🚀 Training Tuned Asymmetric Hybrid (Current Best Method)...")
+
+# Stage 1: Classifier
+y_train_binary = (y_train > 0.1).astype(int)
+stage1_clf = LGBMClassifier(n_estimators=300, learning_rate=0.03, class_weight='balanced', random_state=42, verbose=-1)
+stage1_clf.fit(X_train, y_train_binary)
+
+# Stage 2: Asymmetric Regressor (Penalty > 25mm)
+def moderated_asymmetric_loss(y_true, y_pred):
+    residual = y_true - y_pred
+    asym_weight = np.where((y_true > 25.0) & (residual > 0), 1.8, 1.0)
+    return -asym_weight * residual, asym_weight
+
+rain_mask = y_train > 0.1
+stage2_reg = LGBMRegressor(n_estimators=350, learning_rate=0.03, random_state=42, verbose=-1)
+stage2_reg.set_params(objective=moderated_asymmetric_loss)
+stage2_reg.fit(X_train[rain_mask], y_train[rain_mask])
+
+# Inference on Test Set
+probs = stage1_clf.predict_proba(X_test)[:, 1]
+raw_preds = stage2_reg.predict(X_test)
+final_preds = np.maximum(0.0, np.where(probs >= 0.45, raw_preds, 0.0))
+
+# Save Model & Log to Tracker
+joblib.dump({"clf": stage1_clf, "reg": stage2_reg}, os.path.join(MODEL_DIR, "tuned_asym_hybrid.pkl"))
+log_model_to_tracker("Tuned Asymmetric Hybrid", "1.8x Penalty on >25mm missed events", y_test, final_preds)
+
+# You can easily add earlier models to the tracker here as well (e.g., CatBoost, Standard Hybrid) to populate the dashboard.
+--------------------------------------------------------------------------------

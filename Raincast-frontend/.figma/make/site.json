@@ -1,0 +1,10 @@
+{
+  "description": "Predict extreme flood risks using AI-driven models with interactive maps, real-time data, and detailed analytics for informed disaster management.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
