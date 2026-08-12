@@ -1,0 +1,29 @@
+{
+    "project_name": "Pan-India Hybrid Rainfall Forecaster",
+    "last_updated": "2026-08-10 14:10:47",
+    "experiments": [
+        {
+            "id": "Tuned_Asym_Hybrid_Indore_0",
+            "model_name": "Tuned Asym Hybrid",
+            "location": "Indore",
+            "coordinates": {
+                "lat": 22.7196,
+                "lon": 75.8577
+            },
+            "parameters": {
+                "Classifier": "LGBM (lr=0.03, n=300)",
+                "Regressor": "LGBM Asymmetric (lr=0.03, n=350)",
+                "Penalty_Multiplier": "1.8x",
+                "Penalty_Threshold": ">25mm",
+                "Activation_Threshold": "Prob >= 0.45"
+            },
+            "metrics": {
+                "RMSE": 6.3636,
+                "MAE": 1.8911,
+                "CSI": 0.7952,
+                "Extreme_CSI": 0.3611
+            },
+            "timestamp": "2026-08-10 14:10"
+        }
+    ]
+}
