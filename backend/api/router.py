@@ -144,18 +144,25 @@ def get_prediction(request: PredictionRequest):
         se = sae = 0
         threshold = 10.0 # Heavy rain threshold for classification metrics
         
+        total = len(test_evaluation) or 1
+        mean_actual = sum(d['actual'] for d in test_evaluation) / total
+        nse_numerator = 0
+        nse_denominator = 0
+        
         for d in test_evaluation:
             act = d['actual']
             pred = d['predicted']
             se += (act - pred) ** 2
             sae += abs(act - pred)
             
+            nse_numerator += (act - pred) ** 2
+            nse_denominator += (act - mean_actual) ** 2
+            
             if act > threshold and pred > threshold: tp += 1
             elif act <= threshold and pred <= threshold: tn += 1
             elif act <= threshold and pred > threshold: fp += 1
             elif act > threshold and pred <= threshold: fn += 1
             
-        total = len(test_evaluation) or 1
         rmse = math.sqrt(se / total)
         mae = sae / total
         
@@ -163,9 +170,11 @@ def get_prediction(request: PredictionRequest):
         far = fp / (fp + tp) if (fp + tp) > 0 else 0
         acc = (tp + tn) / total
         csi = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else 0
+        nse = (1 - (nse_numerator / nse_denominator)) if nse_denominator > 0 else 0
         
         metrics = [
             {"label": "Accuracy", "val": f"{acc*100:.1f}%", "sub": "Overall", "color": "#00d4ff"},
+            {"label": "NSE", "val": f"{nse:.2f}", "sub": "Nash-Sutcliffe", "color": "#f50b86"},
             {"label": "CSI", "val": f"{csi:.3f}", "sub": "Critical Success", "color": "#06ffa5"},
             {"label": "POD", "val": f"{pod:.3f}", "sub": "Prob. of Detection", "color": "#06ffa5"},
             {"label": "FAR", "val": f"{far:.3f}", "sub": "False Alarm Rate", "color": "#f59e0b"},
