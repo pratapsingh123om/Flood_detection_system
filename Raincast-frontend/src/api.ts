@@ -48,7 +48,7 @@ export interface ModelInfo {
 }
 
 export async function fetchAvailableModels(): Promise<ModelInfo[]> {
-  const response = await fetch("http://localhost:8000/api/models");
+  const response = await fetch("https://raincast-backend-fqrk.onrender.com/api/models");
   if (!response.ok) {
     throw new Error(`API error: ${response.statusText}`);
   }
@@ -57,7 +57,7 @@ export async function fetchAvailableModels(): Promise<ModelInfo[]> {
 }
 
 export async function getPrediction(payload: PredictionPayload): Promise<PredictionResponse> {
-  const response = await fetch("http://localhost:8000/api/predict", {
+  const response = await fetch("https://raincast-backend-fqrk.onrender.com/api/predict", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
