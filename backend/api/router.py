@@ -78,7 +78,7 @@ def get_prediction(request: PredictionRequest):
                     drainage=request.drainage
                 )
                 for day in forecast_7_days:
-                    day['prediction'] = round(day['prediction'] * 1.05, 1)
+                    day['rain'] = round(day['rain'] * 1.05, 1)
                 
                 if request.timeframe == "month":
                     test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
