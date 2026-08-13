@@ -78,11 +78,16 @@ def get_prediction(request: PredictionRequest):
                     drainage=request.drainage
                 )
                 for day in forecast_7_days:
-                    day['prediction'] = round(day['prediction'] * 1.05, 1) # Slight tuning for deep learning simulation
+                    day['prediction'] = round(day['prediction'] * 1.05, 1)
                 
-                test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
-                for d in test_evaluation:
-                    d['our_prediction'] = round(d['our_prediction'] * 1.05, 1)
+                if request.timeframe == "month":
+                    test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
+                    for d in test_evaluation:
+                        d['our_prediction'] = round(d['our_prediction'] * 1.05, 1)
+                else:
+                    test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
+                    for d in test_evaluation:
+                        d['predicted'] = round(d['predicted'] * 1.05, 1)
                     
         else:
             # Traditional Scikit-Learn / XGBoost Models
