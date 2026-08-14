@@ -188,11 +188,17 @@ def get_prediction(request: PredictionRequest):
         tp = tn = fp = fn = 0
         se = sae = 0
         threshold = 10.0 # Heavy rain threshold for classification metrics
+        ext_threshold = 30.0 # Extreme flood threshold
         
         total = len(test_evaluation) or 1
         mean_actual = sum(d['actual'] for d in test_evaluation) / total
         nse_numerator = 0
         nse_denominator = 0
+        
+        ext_tp = 0
+        ext_tn = 0
+        ext_fp = 0
+        ext_fn = 0
         
         for d in test_evaluation:
             act = d['actual']
@@ -208,6 +214,11 @@ def get_prediction(request: PredictionRequest):
             elif act <= threshold and pred > threshold: fp += 1
             elif act > threshold and pred <= threshold: fn += 1
             
+            if act > ext_threshold and pred > ext_threshold: ext_tp += 1
+            elif act <= ext_threshold and pred <= ext_threshold: ext_tn += 1
+            elif act <= ext_threshold and pred > ext_threshold: ext_fp += 1
+            elif act > ext_threshold and pred <= ext_threshold: ext_fn += 1
+            
         rmse = math.sqrt(se / total)
         mae = sae / total
         
@@ -217,8 +228,11 @@ def get_prediction(request: PredictionRequest):
         csi = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else 0
         nse = (1 - (nse_numerator / nse_denominator)) if nse_denominator > 0 else 0
         
+        ext_acc = (ext_tp + ext_tn) / total
+        
         metrics = [
             {"label": "Accuracy", "val": f"{acc*100:.1f}%", "sub": "Overall", "color": "#00d4ff"},
+            {"label": "Ext Acc", "val": f"{ext_acc*100:.1f}%", "sub": ">30mm Events", "color": "#f50b86"},
             {"label": "NSE", "val": f"{nse:.2f}", "sub": "Nash-Sutcliffe", "color": "#f50b86"},
             {"label": "CSI", "val": f"{csi:.3f}", "sub": "Critical Success", "color": "#06ffa5"},
             {"label": "POD", "val": f"{pod:.3f}", "sub": "Prob. of Detection", "color": "#06ffa5"},
