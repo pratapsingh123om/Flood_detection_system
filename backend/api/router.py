@@ -66,17 +66,41 @@ def get_prediction(request: PredictionRequest):
                 response = requests.post(
                     f"{microservice_url}/predict_unet", 
                     json={"location": request.location},
-                    timeout=30
+                    timeout=120
                 )
                 
                 if response.status_code == 200:
                     unet_data = response.json()
                     
                     # Map the microservice output to the dashboard's format
-                    forecast_7_days = [
-                        {"day": d["day"], "rain": d["predicted_rain"]} 
-                        for d in unet_data.get("forecast", [])
-                    ]
+                    from datetime import datetime, timedelta
+                    days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    current_date = datetime.now()
+                    
+                    forecast_7_days = []
+                    for i, d in enumerate(unet_data.get("forecast", [])):
+                        day_str = days_of_week[(current_date.weekday() + i) % 7]
+                        rain_val = float(d["predicted_rain"])
+                        
+                        icon = '🌤'
+                        intensity = 0.1
+                        if rain_val > 30:
+                            icon = '⛈'
+                            intensity = 0.9
+                        elif rain_val > 10:
+                            icon = '🌧'
+                            intensity = 0.6
+                        elif rain_val > 0:
+                            icon = '🌦'
+                            intensity = 0.3
+                            
+                        forecast_7_days.append({
+                            "day": day_str,
+                            "temp": 30.0, # Placeholder temp
+                            "rain": rain_val,
+                            "icon": icon,
+                            "intensity": intensity
+                        })
                     
                     # Use baseline models for the historical evaluation portion since U-Net output is strictly future forecast
                     if request.timeframe == "month":
