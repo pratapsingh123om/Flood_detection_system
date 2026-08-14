@@ -40,9 +40,12 @@ def evaluate_test_data(model_name: str) -> list:
                         if prob < thresh:
                             predicted_rain = 0.0
                         else:
-                            is_extreme = model["stage2_extreme_clf"].predict(row)[0]
-                            if is_extreme:
+                            ext_prob = model["stage2_extreme_clf"].predict_proba(row)[0, 1]
+                            # Lower threshold from default 0.5 to 0.35 to catch more extreme events 
+                            if ext_prob > 0.35:
                                 predicted_rain = model["stage3b_extreme_reg"].predict(row)[0]
+                                # Add a 10% safety buffer for flood forecasting on extreme events
+                                predicted_rain *= 1.10
                             else:
                                 predicted_rain = model["stage3a_reg"].predict(row)[0]
                     else:
