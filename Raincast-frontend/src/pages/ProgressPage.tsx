@@ -15,6 +15,23 @@ const C = {
 
 const changelog = [
   {
+    version: 'v1.4.0',
+    date: '2026-08-15',
+    tag: 'Cloud & Tuning',
+    tagColor: C.red,
+    added: [
+      'Deployed Spatio-Temporal U-Net Microservice to Cloud Run',
+      'Added Extreme Event Accuracy (Ext Acc) Metric for floods >30mm',
+      'Tuned probabilistic classification threshold (0.35) & safety buffer (+10%)',
+    ],
+    why: 'The complex U-Net model was moved to a Google Cloud Run microservice to avoid blocking the backend. We also realized missing a catastrophic flood is more dangerous than a false alarm, so we added an Ext Acc metric and lowered the detection threshold to catch extreme events early.',
+    improved: [
+      { label: 'U-Net Execution', from: 'Local Crash', to: '120s Cloud Microservice', delta: 'Cloud' },
+      { label: 'Dashboard Metrics', from: '7 UI Metrics', to: '8 UI Metrics (Ext Acc)', delta: '+1' },
+      { label: 'Extreme Accuracy', from: '92.9%', to: 'Optimized', delta: 'Tuned' },
+    ],
+  },
+  {
     version: 'v1.3.0',
     date: '2026-08-12',
     tag: 'Feature',
