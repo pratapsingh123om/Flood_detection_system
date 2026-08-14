@@ -40,10 +40,10 @@ def get_available_models():
     # Sort upgraded_extreme_hybrid_pipeline to the top as the 'best' model
     models.sort(key=lambda x: 0 if x["id"] == "upgraded_extreme_hybrid_pipeline" else 1)
     
-    # Inject the ConvLSTM Deep Learning Model manually so the UI can see it
+    # Inject the U-Net Deep Learning Model manually so the UI can see it
     models.insert(0, {
         "id": "convlstm_spatial_model",
-        "name": "ConvLSTM (Spatial Deep Learning)"
+        "name": "Spatio-Temporal U-Net (Cloud Microservice)"
     })
         
     return {"models": models}
