@@ -77,6 +77,8 @@ def get_prediction(request: PredictionRequest):
                     days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
                     current_date = datetime.now()
                     
+                    print("✅ U-Net Microservice SUCCESS! Returning real data.")
+                    
                     forecast_7_days = []
                     for i, d in enumerate(unet_data.get("forecast", [])):
                         day_str = days_of_week[(current_date.weekday() + i) % 7]
@@ -96,7 +98,7 @@ def get_prediction(request: PredictionRequest):
                             
                         forecast_7_days.append({
                             "day": day_str,
-                            "temp": 30.0, # Placeholder temp
+                            "temp": 99.9, # VISUAL INDICATOR FOR FRONTEND
                             "rain": rain_val,
                             "icon": icon,
                             "intensity": intensity
@@ -111,7 +113,7 @@ def get_prediction(request: PredictionRequest):
                     raise Exception(f"Microservice returned {response.status_code}")
                     
             except Exception as e:
-                print(f"⚠️ Microservice Unreachable ({e}). Falling back to baseline simulation.")
+                print(f"❌ U-Net Microservice FAILED ({e}). Falling back to baseline simulation.")
                 # Provide a high-accuracy fallback so the UI works until the Microservice is deployed
                 forecast_7_days = predict_7_days(
                     model_name="upgraded_extreme_hybrid_pipeline",

@@ -3,10 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.router import api_router
 
 # Initialize FastAPI application
+print("\n" + "="*50)
+print("🚀 RAINCAST BACKEND DEPLOYED - v1.0.4")
+print("🔥 INCLUDES: 120s U-Net Timeout Fix & UI Mapping!")
+print("="*50 + "\n")
+
 app = FastAPI(
     title="RainCast AI Backend",
     description="Backend API for predicting 7-day rainfall and flood risk.",
-    version="1.0.0"
+    version="1.0.4"
 )
 
 # Configure CORS to allow the React frontend to communicate with the backend
