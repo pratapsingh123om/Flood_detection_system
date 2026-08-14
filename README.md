@@ -13,7 +13,7 @@ RainCast AI is a hyper-local flood detection and weather forecasting web platfor
 To ensure academic and operational rigor, the architecture of RainCast AI was designed based on recent breakthroughs in hydrological uncertainty research. 
 
 ### 1. Superiority of Gridded Satellite Data
-* **The Benchmark:** Traditional flood models rely on sparse physical rain gauges. RainCast AI utilizes **47 years of continuous ERA5 gridded satellite data** (1979-2025) via Google Earth Engine.
+* **The Benchmark:** Traditional flood models rely on sparse physical rain gauges. RainCast AI utilizes **75 years of continuous ERA5 gridded satellite data** (1950-2025) via Google Earth Engine.
 * **The Validation:** Recent uncertainty analyses in hydrological modelling (e.g., *NIT Warangal M.Tech thesis on Multi-source Uncertainties*) prove that ensembles using high-resolution gridded rainfall data are mathematically more precise and exhibit far less input uncertainty than models relying on scattered gauge station data.
 
 ### 2. Eliminating Parameter Uncertainty via Deep Learning
