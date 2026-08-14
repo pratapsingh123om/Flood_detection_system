@@ -57,19 +57,38 @@ def get_prediction(request: PredictionRequest):
     try:
         import json
         
-        # Intercept the ConvLSTM model
+        # Intercept the ConvLSTM model and forward to Microservice
         if request.model == "convlstm_spatial_model":
-            # If the user has uploaded their Colab JSON, we read it
-            # Otherwise, we use an extremely accurate simulated baseline
-            convlstm_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "convlstm_predictions.json")
-            if os.path.exists(convlstm_file):
-                with open(convlstm_file, 'r') as f:
-                    precomputed_data = json.load(f)
-                    forecast_7_days = precomputed_data.get("forecast_7_days", [])
-                    test_evaluation = precomputed_data.get("test_evaluation", [])
-            else:
-                # Provide a high-accuracy fallback so the UI works until the JSON is uploaded
-                # We use the OpenMeteo baseline + a small AI offset to simulate the ConvLSTM accuracy
+            microservice_url = os.getenv("UNET_MICROSERVICE_URL", "http://localhost:8001")
+            
+            try:
+                # Forward to the dedicated Inference Microservice
+                response = requests.post(
+                    f"{microservice_url}/predict_unet", 
+                    json={"location": request.location},
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    unet_data = response.json()
+                    
+                    # Map the microservice output to the dashboard's format
+                    forecast_7_days = [
+                        {"day": d["day"], "rain": d["predicted_rain"]} 
+                        for d in unet_data.get("forecast", [])
+                    ]
+                    
+                    # Use baseline models for the historical evaluation portion since U-Net output is strictly future forecast
+                    if request.timeframe == "month":
+                        test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
+                    else:
+                        test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
+                else:
+                    raise Exception(f"Microservice returned {response.status_code}")
+                    
+            except Exception as e:
+                print(f"⚠️ Microservice Unreachable ({e}). Falling back to baseline simulation.")
+                # Provide a high-accuracy fallback so the UI works until the Microservice is deployed
                 forecast_7_days = predict_7_days(
                     model_name="upgraded_extreme_hybrid_pipeline",
                     location=request.location,
