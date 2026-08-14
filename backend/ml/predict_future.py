@@ -56,12 +56,26 @@ def predict_next_30_days(model_name: str, location: str) -> list:
         try:
             if isinstance(model, dict):
                 clf = model.get("clf") or model.get("stage1_clf")
-                reg = model.get("reg") or model.get("stage2_asym_reg") or model.get("stage2_reg")
-                thresh = model.get("threshold", 0.45)
                 
-                prob = clf.predict_proba(X_pred)[0, 1]
-                raw_pred = reg.predict(X_pred)[0]
-                predicted_rain = raw_pred if prob >= thresh else 0.0
+                if "stage3a_reg" in model and "stage2_extreme_clf" in model:
+                    # 3-stage extreme pipeline
+                    thresh = model.get("optimal_T_rain", 0.45)
+                    prob = clf.predict_proba(X_pred)[0, 1]
+                    if prob < thresh:
+                        predicted_rain = 0.0
+                    else:
+                        is_extreme = model["stage2_extreme_clf"].predict(X_pred)[0]
+                        if is_extreme:
+                            predicted_rain = model["stage3b_extreme_reg"].predict(X_pred)[0]
+                        else:
+                            predicted_rain = model["stage3a_reg"].predict(X_pred)[0]
+                else:
+                    # 2-stage standard pipeline
+                    reg = model.get("reg") or model.get("stage2_asym_reg") or model.get("stage2_reg")
+                    thresh = model.get("threshold", 0.45)
+                    prob = clf.predict_proba(X_pred)[0, 1]
+                    raw_pred = reg.predict(X_pred)[0]
+                    predicted_rain = raw_pred if prob >= thresh else 0.0
             else:
                 pred = model.predict(X_pred)
                 predicted_rain = float(pred[0]) if isinstance(pred, (list, np.ndarray)) else float(pred)

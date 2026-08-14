@@ -66,7 +66,7 @@ def get_prediction(request: PredictionRequest):
                 response = requests.post(
                     f"{microservice_url}/predict_unet", 
                     json={"location": request.location},
-                    timeout=10
+                    timeout=30
                 )
                 
                 if response.status_code == 200:
