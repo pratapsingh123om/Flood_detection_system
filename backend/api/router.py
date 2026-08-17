@@ -45,6 +45,12 @@ def get_available_models():
         "id": "convlstm_spatial_model",
         "name": "Spatio-Temporal U-Net (Cloud Microservice)"
     })
+    
+    # Inject the new Bias AI Model
+    models.insert(1, {
+        "id": "unet_bias_model",
+        "name": "U-Net AI Bias Calibrator (Microservice)"
+    })
         
     return {"models": models}
 
@@ -133,6 +139,63 @@ def get_prediction(request: PredictionRequest):
                     test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
                     for d in test_evaluation:
                         d['predicted'] = round(d['predicted'] * 1.05, 1)
+                        
+        elif request.model == "unet_bias_model":
+            microservice_url = os.getenv("UNET_MICROSERVICE_URL", "http://localhost:8001")
+            
+            # Generate the baseline physical forecast
+            forecast_7_days = predict_7_days(
+                model_name="upgraded_extreme_hybrid_pipeline",
+                location=request.location,
+                runoff=request.runoff,
+                elevation=request.elevation,
+                drainage=request.drainage
+            )
+            
+            try:
+                # Ping the Bias microservice
+                response = requests.post(
+                    f"{microservice_url}/predict_bias", 
+                    json={"location": request.location},
+                    timeout=30
+                )
+                
+                if response.status_code == 200:
+                    bias_data = response.json().get("bias_correction", [])
+                    print("✅ U-Net Bias Microservice SUCCESS! Applying calibration.")
+                    
+                    for i in range(min(len(forecast_7_days), len(bias_data))):
+                        base_rain = forecast_7_days[i]['rain']
+                        # De-normalize bias (assumed percentage or normalized mm shift). Multiply by 100 to get a meaningful mm adjustment.
+                        bias_val = bias_data[i]['predicted_bias'] * 100 
+                        corrected = max(0.0, round(base_rain + bias_val, 1))
+                        
+                        forecast_7_days[i]['rain'] = corrected
+                        
+                        # Adjust visual intensity based on calibrated rainfall
+                        if corrected > 30:
+                            forecast_7_days[i]['icon'] = '⛈'
+                            forecast_7_days[i]['intensity'] = 0.9
+                        elif corrected > 10:
+                            forecast_7_days[i]['icon'] = '🌧'
+                            forecast_7_days[i]['intensity'] = 0.6
+                        elif corrected > 0:
+                            forecast_7_days[i]['icon'] = '🌦'
+                            forecast_7_days[i]['intensity'] = 0.3
+                        else:
+                            forecast_7_days[i]['icon'] = '🌤'
+                            forecast_7_days[i]['intensity'] = 0.1
+                else:
+                    raise Exception(f"Microservice returned {response.status_code}")
+                    
+            except Exception as e:
+                print(f"❌ U-Net Bias Microservice FAILED ({e}). Returning uncalibrated baseline.")
+                
+            # Use baseline for the historical evaluation charts
+            if request.timeframe == "month":
+                test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
+            else:
+                test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
                     
         else:
             # Traditional Scikit-Learn / XGBoost Models
@@ -146,7 +209,7 @@ def get_prediction(request: PredictionRequest):
             
         if request.timeframe == "month":
             # Future prediction mode
-            if request.model != "convlstm_spatial_model":
+            if request.model not in ["convlstm_spatial_model", "unet_bias_model"]:
                 test_evaluation = predict_next_30_days(model_name=request.model, location=request.location)
 
             # Map 'our_prediction' to 'predicted' and set actual to 0 for chart compatibility
@@ -180,7 +243,7 @@ def get_prediction(request: PredictionRequest):
                 print(f"OpenMeteo fetch failed: {e}")
         else:
             # Test evaluation mode (past 42 days)
-            if request.model != "convlstm_spatial_model":
+            if request.model not in ["convlstm_spatial_model", "unet_bias_model"]:
                 test_evaluation = evaluate_test_data(model_name=request.model)
         
         # Calculate dynamic metrics
