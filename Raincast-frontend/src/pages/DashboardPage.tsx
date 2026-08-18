@@ -228,11 +228,10 @@ export default function DashboardPage() {
                     <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe !== 'test' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", alignItems: 'center', flexWrap: 'wrap' }}>
-                    {timeframe !== 'test' && <span style={{ color: C.cyan, opacity: 0.5 }}>- - CMIP of India (Baseline)</span>}
+                    {timeframe !== 'test' && <span style={{ color: C.cyan }}>── CMIP of India</span>}
                     <span style={{ color: C.red }}>── {timeframe === 'test' ? "Predicted" : "AI Prediction"}</span>
-                    {timeframe !== 'test' && <span style={{ color: C.purple }}>── {baselineModel}</span>}
                     {timeframe === 'test' && <span style={{ color: C.cyan }}>── Actual</span>}
-                    <span style={{ color: C.amber, opacity: 0.7 }}>- - Threshold</span>
+                    {timeframe === 'test' && <span style={{ color: C.amber, opacity: 0.7 }}>- - Threshold</span>}
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={180}>
@@ -251,9 +250,9 @@ export default function DashboardPage() {
                     <XAxis dataKey="date" stroke={C.dim} tick={{ fontSize: 10, fill: C.muted, fontFamily: "'JetBrains Mono', monospace" }} axisLine={false} tickLine={false} />
                     <YAxis stroke={C.dim} tick={{ fontSize: 10, fill: C.muted, fontFamily: "'JetBrains Mono', monospace" }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }} />
-                    <ReferenceLine y={30} stroke={C.amber} strokeDasharray="4 4" strokeOpacity={0.6} />
-                    <Area type="monotone" dataKey="actual" stroke={timeframe === 'test' ? C.cyan : C.purple} strokeWidth={2} fill="url(#rainGrad)" />
-                    {timeframe !== 'test' && <Line type="monotone" dataKey="default_cmip" stroke={C.cyan} strokeWidth={2} dot={false} strokeDasharray="3 3" opacity={0.5} />}
+                    {timeframe === 'test' && <ReferenceLine y={30} stroke={C.amber} strokeDasharray="4 4" strokeOpacity={0.6} />}
+                    {timeframe === 'test' && <Area type="monotone" dataKey="actual" stroke={C.cyan} strokeWidth={2} fill="url(#rainGrad)" />}
+                    {timeframe !== 'test' && <Line type="monotone" dataKey="default_cmip" stroke={C.cyan} strokeWidth={2} dot={false} strokeDasharray="3 3" opacity={0.8} />}
                     <Area type="monotone" dataKey="predicted" stroke={C.red} strokeWidth={2} fill="url(#floodGrad)" />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -340,34 +339,6 @@ export default function DashboardPage() {
                 ))}
               </div>
             </div>
-
-            {/* Global Climate Baseline */}
-            {timeframe !== 'test' && (
-              <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
-                <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 10px', color: C.muted, letterSpacing: '0.05em' }}>GLOBAL CLIMATE BASELINE</p>
-                <select
-                  value={baselineModel}
-                  onChange={e => setBaselineModel(e.target.value)}
-                  style={{
-                    width: '100%', padding: '10px 14px',
-                    background: C.surface, border: `1px solid ${C.borderBright}`,
-                    borderRadius: 8, color: C.purple, fontSize: 13,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    outline: 'none', cursor: 'pointer',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a277ff' stroke-width='1.5'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 14px center',
-                  }}
-                >
-                  <option value="MPI_ESM1_2_XR">MPI-ESM1-2-XR (Germany)</option>
-                  <option value="GFDL_ESM4">GFDL-ESM4 (USA)</option>
-                  <option value="FGOALS_f3_H">FGOALS-f3-H (China)</option>
-                  <option value="EC_Earth3P_HR">EC-Earth3P-HR (Europe)</option>
-                  <option value="MRI_AGCM3_2_S">MRI-AGCM3-2-S (Japan)</option>
-                </select>
-              </div>
-            )}
 
             {/* Performance metrics */}
             {timeframe === 'test' && (
