@@ -36,17 +36,24 @@ def fetch_cmip6_data(lat: float, lon: float, start_date: str, end_date: str) -> 
     df = pd.DataFrame(daily)
     return df
 
-def predict_cmip6_climate(model_name: str, location: str) -> list:
+def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year") -> list:
     """
-    Predicts extreme weather events using CMIP6 baseline data for July-August 2027.
+    Predicts extreme weather events using CMIP6 baseline data for specific timeframes.
     """
     # Hardcoded Indore coordinates for this implementation
     lat, lon = 22.7196, 75.8577
     
     # We fetch a slightly longer window to allow for lag feature generation
-    # We want predictions for July 1 to Aug 31.
-    start_date = "2027-06-20"
-    end_date = "2027-08-31"
+    if timeframe == "month":
+        start_date = "2027-08-01"
+        end_date = "2027-09-30"
+        viz_start = "2027-08-15"
+        viz_end = "2027-09-15"
+    else:
+        start_date = "2027-06-20"
+        end_date = "2027-08-31"
+        viz_start = "2027-07-01"
+        viz_end = "2027-08-31"
     
     df_raw = fetch_cmip6_data(lat, lon, start_date, end_date)
     
@@ -75,8 +82,8 @@ def predict_cmip6_climate(model_name: str, location: str) -> list:
     # Process features
     df_proc = preprocess_dataset(df)
     
-    # Filter only the requested visualization dates (July 1 to Aug 31)
-    df_proc = df_proc[df_proc['date'] >= pd.to_datetime("2027-07-01")].reset_index(drop=True)
+    # Filter only the requested visualization dates
+    df_proc = df_proc[(df_proc['date'] >= pd.to_datetime(viz_start)) & (df_proc['date'] <= pd.to_datetime(viz_end))].reset_index(drop=True)
     
     # Load model
     model = load_ml_model(model_name)

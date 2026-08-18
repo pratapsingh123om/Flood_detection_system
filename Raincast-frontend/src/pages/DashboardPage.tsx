@@ -184,18 +184,13 @@ export default function DashboardPage() {
               <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                   <div>
-                    <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 15, margin: 0, marginBottom: 2 }}>{timeframe === 'month' ? "Future 30-Day Forecast" : timeframe === 'year' ? "CMIP6 Climate Projection (Jul-Aug 2027)" : "Model Evaluation (Jul-Aug 2026)"}</p>
-                    <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe === 'month' ? "Predicted Rainfall" : timeframe === 'year' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
+                    <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 15, margin: 0, marginBottom: 2 }}>{timeframe === 'month' ? "CMIP6 Climate Projection (Aug-Sep 2027)" : timeframe === 'year' ? "CMIP6 Climate Projection (Jul-Aug 2027)" : "Model Evaluation (Jul-Aug 2026)"}</p>
+                    <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe !== 'test' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", alignItems: 'center' }}>
-                    {timeframe === 'month' && (
-                      <label style={{ color: C.purple, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <input type="checkbox" checked={showOpenMeteo} onChange={e => setShowOpenMeteo(e.target.checked)} />
-                        OpenMeteo Baseline
-                      </label>
-                    )}
-                    {timeframe !== 'month' && <span style={{ color: C.cyan }}>── {timeframe === 'year' ? "CMIP6 Baseline" : "Actual"}</span>}
-                    <span style={{ color: C.red }}>── {timeframe === 'year' ? "AI Prediction" : "Predicted"}</span>
+                    {timeframe !== 'test' && <span style={{ color: C.cyan }}>── CMIP6 Baseline</span>}
+                    {timeframe === 'test' && <span style={{ color: C.cyan }}>── Actual</span>}
+                    <span style={{ color: C.red }}>── {timeframe === 'test' ? "Predicted" : "AI Prediction"}</span>
                     <span style={{ color: C.amber, opacity: 0.7 }}>- - Threshold</span>
                   </div>
                 </div>
@@ -218,9 +213,6 @@ export default function DashboardPage() {
                     <ReferenceLine y={30} stroke={C.amber} strokeDasharray="4 4" strokeOpacity={0.6} />
                     <Area type="monotone" dataKey="actual" stroke={C.cyan} strokeWidth={2} fill="url(#rainGrad)" />
                     <Area type="monotone" dataKey="predicted" stroke={C.red} strokeWidth={2} fill="url(#floodGrad)" />
-                    {showOpenMeteo && timeframe === 'month' && (
-                      <Area type="monotone" dataKey="openmeteo" stroke={C.purple} strokeWidth={2} fill="none" strokeDasharray="3 3" />
-                    )}
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -308,17 +300,19 @@ export default function DashboardPage() {
             </div>
 
             {/* Performance metrics */}
-            <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
-              <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 12px', color: C.muted, letterSpacing: '0.05em' }}>PERFORMANCE METRICS</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                {metrics.map(m => (
-                  <div key={m.label} style={{ padding: '8px', borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, textAlign: 'center' }}>
-                    <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.dim, margin: '0 0 2px', letterSpacing: '0.05em' }}>{m.label}</p>
-                    <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 14, color: m.color, margin: 0 }}>{m.val}</p>
-                  </div>
-                ))}
+            {timeframe === 'test' && (
+              <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
+                <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 12px', color: C.muted, letterSpacing: '0.05em' }}>PERFORMANCE METRICS</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  {metrics.map(m => (
+                    <div key={m.label} style={{ padding: '8px', borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, textAlign: 'center' }}>
+                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.dim, margin: '0 0 2px', letterSpacing: '0.05em' }}>{m.label}</p>
+                      <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 14, color: m.color, margin: 0 }}>{m.val}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Hydrological parameters */}
             <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
