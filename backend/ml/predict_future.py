@@ -6,9 +6,9 @@ import logging
 from ml.load_model import load_ml_model
 from ml.preprocess import preprocess_dataset
 
-def predict_next_30_days(model_name: str, location: str) -> list:
+def predict_next_30_days(model_name: str, location: str, days: int = 30) -> list:
     """
-    Autoregressively predicts rainfall for the next 30 days starting from the end of the test dataset.
+    Autoregressively predicts rainfall for the next `days` starting from the end of the test dataset.
     """
     model = load_ml_model(model_name)
     if not model:
@@ -30,8 +30,8 @@ def predict_next_30_days(model_name: str, location: str) -> list:
         
     results = []
     
-    # We will simulate 30 future days
-    for i in range(30):
+    # We will simulate `days` future days
+    for i in range(days):
         last_row = df.iloc[-1].copy()
         next_date = last_row['date'] + datetime.timedelta(days=1)
         

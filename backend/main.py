@@ -4,7 +4,7 @@ from api.router import api_router
 
 # Initialize FastAPI application
 print("\n" + "="*50)
-print("🚀 RAINCAST BACKEND DEPLOYED - v1.0.5")
+print("RAINCAST BACKEND DEPLOYED - v1.0.5")
 print("🔥 INCLUDES: Aug 18 Test Data, Bias Scaling Fix (x10), & OpenMeteo Alignment!")
 print("="*50 + "\n")
 

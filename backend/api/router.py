@@ -133,8 +133,10 @@ def get_prediction(request: PredictionRequest):
                 
                 if request.timeframe in ["year", "month"]:
                     test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-                    for d in test_evaluation:
-                        d['predicted'] = round(d['predicted'] * 1.05, 1)
+                    ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation))
+                    for i, d in enumerate(test_evaluation):
+                        if i < len(ai_preds):
+                            d['predicted'] = ai_preds[i]['our_prediction']
                 else:
                     test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
                     for d in test_evaluation:
@@ -194,11 +196,10 @@ def get_prediction(request: PredictionRequest):
             # Use baseline for the historical evaluation charts
             if request.timeframe in ["year", "month"]:
                 test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-                # Dynamically apply a visible calibration improvement for the U-Net Bias Model on climate data
-                for d in test_evaluation:
-                    diff = d['actual'] - d['predicted']
-                    # Squeeze the error by 40% to show substantial metric improvement for U-Net
-                    d['predicted'] = round(d['predicted'] + (diff * 0.40), 1)
+                ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation))
+                for i, d in enumerate(test_evaluation):
+                    if i < len(ai_preds):
+                        d['predicted'] = ai_preds[i]['our_prediction']
             else:
                 test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
                 # Dynamically apply a visible calibration improvement for the U-Net Bias Model on historical data
@@ -220,6 +221,10 @@ def get_prediction(request: PredictionRequest):
         if request.timeframe in ["year", "month"]:
             if request.model not in ["convlstm_spatial_model", "unet_bias_model"]:
                 test_evaluation = predict_cmip6_climate(model_name=request.model, location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
+                ai_preds = predict_next_30_days(model_name=request.model, location=request.location, days=len(test_evaluation))
+                for i, d in enumerate(test_evaluation):
+                    if i < len(ai_preds):
+                        d['predicted'] = ai_preds[i]['our_prediction']
         else:
             # Test evaluation mode (past 42 days)
             if request.model not in ["convlstm_spatial_model", "unet_bias_model"]:
