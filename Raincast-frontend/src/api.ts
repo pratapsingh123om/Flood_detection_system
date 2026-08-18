@@ -24,6 +24,7 @@ export interface TestDataPoint {
   date: string;
   actual: number;
   predicted: number;
+  default_cmip?: number;
   threshold: number;
 }
 

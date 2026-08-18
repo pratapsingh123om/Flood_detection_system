@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, ResponsiveContainer, Area, AreaChart,
+  ReferenceLine, ResponsiveContainer, Area, ComposedChart,
 } from 'recharts'
 import { MapContainer, TileLayer, Circle, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -227,15 +227,16 @@ export default function DashboardPage() {
                     <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 15, margin: 0, marginBottom: 2 }}>{timeframe === 'month' ? "CMIP6 Climate Projection (Aug-Sep 2027)" : timeframe === 'year' ? "CMIP6 Climate Projection (Jul-Aug 2027)" : "Model Evaluation (Jul-Aug 2026)"}</p>
                     <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe !== 'test' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
                   </div>
-                  <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", alignItems: 'center' }}>
-                    {timeframe !== 'test' && <span style={{ color: C.cyan }}>── CMIP6 Baseline</span>}
+                  <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", alignItems: 'center', flexWrap: 'wrap' }}>
+                    {timeframe !== 'test' && <span style={{ color: C.purple }}>── {baselineModel}</span>}
+                    {timeframe !== 'test' && <span style={{ color: C.cyan, opacity: 0.5 }}>- - Standard CMIP6</span>}
                     {timeframe === 'test' && <span style={{ color: C.cyan }}>── Actual</span>}
                     <span style={{ color: C.red }}>── {timeframe === 'test' ? "Predicted" : "AI Prediction"}</span>
                     <span style={{ color: C.amber, opacity: 0.7 }}>- - Threshold</span>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={180}>
-                  <AreaChart data={forecastData}>
+                  <ComposedChart data={forecastData}>
                     <defs>
                       <linearGradient id="rainGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={C.cyan} stopOpacity={0.15}/>
@@ -251,9 +252,10 @@ export default function DashboardPage() {
                     <YAxis stroke={C.dim} tick={{ fontSize: 10, fill: C.muted, fontFamily: "'JetBrains Mono', monospace" }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }} />
                     <ReferenceLine y={30} stroke={C.amber} strokeDasharray="4 4" strokeOpacity={0.6} />
-                    <Area type="monotone" dataKey="actual" stroke={C.cyan} strokeWidth={2} fill="url(#rainGrad)" />
+                    <Area type="monotone" dataKey="actual" stroke={timeframe === 'test' ? C.cyan : C.purple} strokeWidth={2} fill="url(#rainGrad)" />
+                    {timeframe !== 'test' && <Line type="monotone" dataKey="default_cmip" stroke={C.cyan} strokeWidth={2} dot={false} strokeDasharray="3 3" opacity={0.5} />}
                     <Area type="monotone" dataKey="predicted" stroke={C.red} strokeWidth={2} fill="url(#floodGrad)" />
-                  </AreaChart>
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
 
