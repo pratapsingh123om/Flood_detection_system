@@ -20,5 +20,5 @@ WORKDIR /app/backend
 # Render uses port 10000 by default. Expose it.
 EXPOSE 10000
 
-# Start the FastAPI server on port 10000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
+# Start the FastAPI server using the PORT environment variable (default to 10000)
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}
