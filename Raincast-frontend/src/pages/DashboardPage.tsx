@@ -228,10 +228,10 @@ export default function DashboardPage() {
                     <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe !== 'test' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", alignItems: 'center', flexWrap: 'wrap' }}>
-                    {timeframe !== 'test' && <span style={{ color: C.purple }}>── {baselineModel}</span>}
-                    {timeframe !== 'test' && <span style={{ color: C.cyan, opacity: 0.5 }}>- - Standard CMIP6</span>}
-                    {timeframe === 'test' && <span style={{ color: C.cyan }}>── Actual</span>}
+                    {timeframe !== 'test' && <span style={{ color: C.cyan, opacity: 0.5 }}>- - CMIP of India (Baseline)</span>}
                     <span style={{ color: C.red }}>── {timeframe === 'test' ? "Predicted" : "AI Prediction"}</span>
+                    {timeframe !== 'test' && <span style={{ color: C.purple }}>── {baselineModel}</span>}
+                    {timeframe === 'test' && <span style={{ color: C.cyan }}>── Actual</span>}
                     <span style={{ color: C.amber, opacity: 0.7 }}>- - Threshold</span>
                   </div>
                 </div>

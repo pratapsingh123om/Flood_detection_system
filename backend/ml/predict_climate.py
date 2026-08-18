@@ -188,22 +188,24 @@ def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year
         viz_start = "2027-07-01"
         viz_end = "2027-08-31"
     
-    df_raw = fetch_cmip6_data(lat, lon, start_date, end_date, baseline_model)
+    # df_selected is the dropdown choice, df_default is the standard MPI_ESM1_2_XR
+    df_selected = fetch_cmip6_data(lat, lon, start_date, end_date, baseline_model)
     if baseline_model != "MPI_ESM1_2_XR":
         try:
             df_default = fetch_cmip6_data(lat, lon, start_date, end_date, "MPI_ESM1_2_XR")
         except:
-            df_default = df_raw.copy()
+            df_default = df_selected.copy()
     else:
-        df_default = df_raw.copy()
+        df_default = df_selected.copy()
     
-    # Map CMIP6 variables to our pipeline's expected base variables
+    # Map CMIP6 variables to our pipeline's expected base variables USING DEFAULT CMIP
+    # This ensures the AI always predicts on the standard baseline
     df = pd.DataFrame()
-    df['date'] = df_raw['time']
-    df['rainfall_mm'] = df_raw['precipitation_sum'].fillna(0.0)
-    df['tmax_degC'] = df_raw['temperature_2m_max']
-    df['tmin_degC'] = df_raw['temperature_2m_min']
-    df['wind_speed_ms'] = df_raw['wind_speed_10m_max'] / 3.6 # km/h to m/s
+    df['date'] = df_default['time']
+    df['rainfall_mm'] = df_default['precipitation_sum'].fillna(0.0)
+    df['tmax_degC'] = df_default['temperature_2m_max']
+    df['tmin_degC'] = df_default['temperature_2m_min']
+    df['wind_speed_ms'] = df_default['wind_speed_10m_max'] / 3.6 # km/h to m/s
     
     # Impute missing variables for CMIP6 models
     # Humidity usually drops as temp rises. Mean is ~84% in Jul/Aug.
@@ -265,16 +267,16 @@ def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year
             logging.warning(f"CMIP6 prediction failed: {e}")
             predicted_rain = 0.0
             
-        # Add the default CMIP data as a reference point for the frontend
-        # The index is the same because dates match perfectly
+        # The 'actual' field in the frontend maps to the chosen dropdown baseline
+        # The 'default_cmip' field maps to the standard MPI_ESM baseline (which the AI uses)
         d_str = row['date'].strftime("%d-%b")
-        default_cmip_val = df_default.iloc[idx]['precipitation_sum'] if pd.notna(df_default.iloc[idx]['precipitation_sum']) else 0.0
+        selected_cmip_val = df_selected.iloc[idx]['precipitation_sum'] if pd.notna(df_selected.iloc[idx]['precipitation_sum']) else 0.0
 
         results.append({
             "date": d_str,
             "predicted": round(predicted_rain, 1),
-            "actual": round(row['rainfall_mm'], 1), # The actual here is the chosen baseline
-            "default_cmip": round(default_cmip_val, 1),
+            "actual": round(selected_cmip_val, 1), # The dropdown chosen model
+            "default_cmip": round(row['rainfall_mm'], 1), # The standard CMIP6 model
             "threshold": 30.0
         })
         
