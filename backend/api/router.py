@@ -6,6 +6,7 @@ from schemas.prediction_response import PredictionResponse, ForecastDay, TestDat
 from ml.predict_7_days import predict_7_days
 from ml.evaluate_test_data import evaluate_test_data
 from ml.predict_future import predict_next_30_days
+from ml.predict_climate import predict_cmip6_climate
 import requests
 import datetime
 
@@ -111,7 +112,9 @@ def get_prediction(request: PredictionRequest):
                         })
                     
                     # Use baseline models for the historical evaluation portion since U-Net output is strictly future forecast
-                    if request.timeframe == "month":
+                    if request.timeframe == "year":
+                        test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
+                    elif request.timeframe == "month":
                         test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
                     else:
                         test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
@@ -131,7 +134,11 @@ def get_prediction(request: PredictionRequest):
                 for day in forecast_7_days:
                     day['rain'] = round(day['rain'] * 1.05, 1)
                 
-                if request.timeframe == "month":
+                if request.timeframe == "year":
+                    test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
+                    for d in test_evaluation:
+                        d['predicted'] = round(d['predicted'] * 1.05, 1)
+                elif request.timeframe == "month":
                     test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
                     for d in test_evaluation:
                         d['our_prediction'] = round(d['our_prediction'] * 1.05, 1)
@@ -192,7 +199,9 @@ def get_prediction(request: PredictionRequest):
                 print(f"❌ U-Net Bias Microservice FAILED ({e}). Returning uncalibrated baseline.")
                 
             # Use baseline for the historical evaluation charts
-            if request.timeframe == "month":
+            if request.timeframe == "year":
+                test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
+            elif request.timeframe == "month":
                 test_evaluation = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location)
             else:
                 test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
@@ -212,7 +221,10 @@ def get_prediction(request: PredictionRequest):
                 drainage=request.drainage
             )
             
-        if request.timeframe == "month":
+        if request.timeframe == "year":
+            if request.model not in ["convlstm_spatial_model", "unet_bias_model"]:
+                test_evaluation = predict_cmip6_climate(model_name=request.model, location=request.location)
+        elif request.timeframe == "month":
             # Future prediction mode
             if request.model not in ["convlstm_spatial_model", "unet_bias_model"]:
                 test_evaluation = predict_next_30_days(model_name=request.model, location=request.location)

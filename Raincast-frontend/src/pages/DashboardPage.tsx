@@ -184,8 +184,8 @@ export default function DashboardPage() {
               <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                   <div>
-                    <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 15, margin: 0, marginBottom: 2 }}>{timeframe === 'month' ? "Future 30-Day Forecast" : "Model Evaluation (Jul-Aug 2026)"}</p>
-                    <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe === 'month' ? "Predicted Rainfall" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
+                    <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 15, margin: 0, marginBottom: 2 }}>{timeframe === 'month' ? "Future 30-Day Forecast" : timeframe === 'year' ? "CMIP6 Climate Projection (Jul-Aug 2027)" : "Model Evaluation (Jul-Aug 2026)"}</p>
+                    <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe === 'month' ? "Predicted Rainfall" : timeframe === 'year' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", alignItems: 'center' }}>
                     {timeframe === 'month' && (
@@ -194,8 +194,8 @@ export default function DashboardPage() {
                         OpenMeteo Baseline
                       </label>
                     )}
-                    {timeframe !== 'month' && <span style={{ color: C.cyan }}>── Actual</span>}
-                    <span style={{ color: C.red }}>── Predicted</span>
+                    {timeframe !== 'month' && <span style={{ color: C.cyan }}>── {timeframe === 'year' ? "CMIP6 Baseline" : "Actual"}</span>}
+                    <span style={{ color: C.red }}>── {timeframe === 'year' ? "AI Prediction" : "Predicted"}</span>
                     <span style={{ color: C.amber, opacity: 0.7 }}>- - Threshold</span>
                   </div>
                 </div>
@@ -287,7 +287,7 @@ export default function DashboardPage() {
 
               {/* Timeframe toggles */}
               <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                {['test', 'month'].map(t => (
+                {['test', 'month', 'year'].map(t => (
                   <button
                     key={t}
                     onClick={() => setTimeframe(t)}
@@ -301,22 +301,9 @@ export default function DashboardPage() {
                       transition: 'all 0.2s',
                     }}
                   >
-                    {t === 'test' ? 'Test Data' : 'Next Month'}
+                    {t === 'test' ? 'Test Data' : t === 'month' ? 'Next Month' : 'Next Year'}
                   </button>
                 ))}
-                <button
-                  disabled
-                  style={{
-                    flex: 1, padding: '8px 12px', borderRadius: 8, cursor: 'not-allowed',
-                    background: 'transparent',
-                    border: `1px solid ${C.border}`,
-                    color: C.dim,
-                    fontSize: 12, fontWeight: 400,
-                    fontFamily: "'Inter', sans-serif",
-                  }}
-                >
-                  Next Year (Pending)
-                </button>
               </div>
             </div>
 
