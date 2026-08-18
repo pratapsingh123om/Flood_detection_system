@@ -59,18 +59,18 @@ def predict_cmip6_climate(model_name: str, location: str) -> list:
     df['wind_speed_ms'] = df_raw['wind_speed_10m_max'] / 3.6 # km/h to m/s
     
     # Impute missing variables for CMIP6 models
-    # Humidity usually drops as temp rises. We can approximate it.
-    df['humidity_pct'] = 80.0 - (df['tmax_degC'] - 25) * 2.0 
-    df['humidity_pct'] = df['humidity_pct'].clip(40.0, 95.0)
+    # Humidity usually drops as temp rises. Mean is ~84% in Jul/Aug.
+    df['humidity_pct'] = 84.0 - (df['tmax_degC'] - 28) * 1.5
+    df['humidity_pct'] = df['humidity_pct'].clip(60.0, 98.0)
     
-    # Dewpoint approximation
-    df['dewpoint_degC'] = df['tmin_degC'] - 1.5
+    # Dewpoint approximation (Mean is ~22C in Jul/Aug)
+    df['dewpoint_degC'] = df['tmin_degC'] - 1.0
     
-    # Constants/Seasonal averages for missing CMIP variables
-    df['radiation_wm2'] = 18.0 # typical monsoon cloudy day radiation
-    df['surface_pressure_hpa'] = 945.0 # Indore elevation pressure
-    df['soil_moisture'] = 0.45 # High during monsoon
-    df['evapotranspiration_mm'] = 3.5
+    # Constants/Seasonal averages for missing CMIP variables based on historical July/August
+    df['radiation_wm2'] = 145.0 # True mean for Jul/Aug, not 18.0!
+    df['surface_pressure_hpa'] = 941.8 
+    df['soil_moisture'] = 0.45 
+    df['evapotranspiration_mm'] = 2.9
     
     # Process features
     df_proc = preprocess_dataset(df)
