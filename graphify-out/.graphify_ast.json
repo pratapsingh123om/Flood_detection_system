@@ -1,0 +1,110 @@
+{
+  "nodes": [
+    {
+      "id": "src_api_forecastday",
+      "label": "ForecastDay",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_metric",
+      "label": "Metric",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L9",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_riskarea",
+      "label": "RiskArea",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_testdatapoint",
+      "label": "TestDataPoint",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L23",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_predictionpayload",
+      "label": "PredictionPayload",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L30",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_predictionresponse",
+      "label": "PredictionResponse",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L38",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_modelinfo",
+      "label": "ModelInfo",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L45",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_fetchavailablemodels",
+      "label": "fetchAvailableModels",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L50",
+      "_origin": "ast"
+    },
+    {
+      "id": "src_api_getprediction",
+      "label": "getPrediction",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L59",
+      "_origin": "ast"
+    }
+  ],
+  "edges": [
+    {
+      "source": "pages_dashboardpage",
+      "target": "src_api_getprediction",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Raincast-frontend/src/pages/DashboardPage.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "pages_dashboardpage",
+      "target": "src_api_fetchavailablemodels",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Raincast-frontend/src/pages/DashboardPage.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "pages_dashboardpage",
+      "target": "src_api_modelinfo",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "Raincast-frontend/src/pages/DashboardPage.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

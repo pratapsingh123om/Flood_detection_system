@@ -14,7 +14,7 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
     
     # Define path to the CSV data
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    csv_path = os.path.join(base_dir, "Data", "data", "indore-rainfall-data.csv")
+    csv_path = os.path.join(base_dir, "Data", "data", "july_data", "indore-rainfall-data-test.csv")
     
     X_latest, dates = get_latest_features(csv_path, num_days=7)
     

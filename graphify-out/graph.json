@@ -1,0 +1,100 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "ForecastDay",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_api_forecastday",
+      "community": 1,
+      "norm_label": "forecastday"
+    },
+    {
+      "label": "Metric",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "src_api_metric",
+      "community": 3,
+      "norm_label": "metric"
+    },
+    {
+      "label": "RiskArea",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "src_api_riskarea",
+      "community": 7,
+      "norm_label": "riskarea"
+    },
+    {
+      "label": "TestDataPoint",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "src_api_testdatapoint",
+      "community": 8,
+      "norm_label": "testdatapoint"
+    },
+    {
+      "label": "PredictionPayload",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "src_api_predictionpayload",
+      "community": 5,
+      "norm_label": "predictionpayload"
+    },
+    {
+      "label": "PredictionResponse",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "src_api_predictionresponse",
+      "community": 6,
+      "norm_label": "predictionresponse"
+    },
+    {
+      "label": "ModelInfo",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L45",
+      "_origin": "ast",
+      "id": "src_api_modelinfo",
+      "community": 4,
+      "norm_label": "modelinfo"
+    },
+    {
+      "label": "fetchAvailableModels",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L50",
+      "_origin": "ast",
+      "id": "src_api_fetchavailablemodels",
+      "community": 0,
+      "norm_label": "fetchavailablemodels"
+    },
+    {
+      "label": "getPrediction",
+      "file_type": "code",
+      "source_file": "Raincast-frontend/src/api.ts",
+      "source_location": "L59",
+      "_origin": "ast",
+      "id": "src_api_getprediction",
+      "community": 2,
+      "norm_label": "getprediction"
+    }
+  ],
+  "links": [],
+  "hyperedges": [],
+  "built_at_commit": "28e26e518475b8a216aa700f22a15f17c5204eef"
+}

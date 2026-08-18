@@ -1,0 +1,97 @@
+{
+  "communities": {
+    "0": [
+      "src_api_fetchavailablemodels"
+    ],
+    "1": [
+      "src_api_forecastday"
+    ],
+    "2": [
+      "src_api_getprediction"
+    ],
+    "3": [
+      "src_api_metric"
+    ],
+    "4": [
+      "src_api_modelinfo"
+    ],
+    "5": [
+      "src_api_predictionpayload"
+    ],
+    "6": [
+      "src_api_predictionresponse"
+    ],
+    "7": [
+      "src_api_riskarea"
+    ],
+    "8": [
+      "src_api_testdatapoint"
+    ]
+  },
+  "cohesion": {
+    "0": 1.0,
+    "1": 1.0,
+    "2": 1.0,
+    "3": 1.0,
+    "4": 1.0,
+    "5": 1.0,
+    "6": 1.0,
+    "7": 1.0,
+    "8": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_api_forecastday",
+      "label": "ForecastDay",
+      "degree": 0
+    },
+    {
+      "id": "src_api_metric",
+      "label": "Metric",
+      "degree": 0
+    },
+    {
+      "id": "src_api_riskarea",
+      "label": "RiskArea",
+      "degree": 0
+    },
+    {
+      "id": "src_api_testdatapoint",
+      "label": "TestDataPoint",
+      "degree": 0
+    },
+    {
+      "id": "src_api_predictionpayload",
+      "label": "PredictionPayload",
+      "degree": 0
+    },
+    {
+      "id": "src_api_predictionresponse",
+      "label": "PredictionResponse",
+      "degree": 0
+    },
+    {
+      "id": "src_api_modelinfo",
+      "label": "ModelInfo",
+      "degree": 0
+    },
+    {
+      "id": "src_api_fetchavailablemodels",
+      "label": "fetchAvailableModels",
+      "degree": 0
+    },
+    {
+      "id": "src_api_getprediction",
+      "label": "getPrediction",
+      "degree": 0
+    }
+  ],
+  "surprises": [],
+  "questions": [
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `ForecastDay`, `Metric`, `RiskArea` to the rest of the system?",
+      "why": "9 weakly-connected nodes found - possible documentation gaps or missing edges."
+    }
+  ]
+}

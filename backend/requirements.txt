@@ -8,3 +8,4 @@ catboost
 pandas
 numpy
 joblib
+requests

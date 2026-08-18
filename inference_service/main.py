@@ -9,10 +9,12 @@ app = FastAPI(title="RainCast Inference Microservice")
 
 # Load TFLite Model
 MODEL_PATH = os.getenv("MODEL_PATH", "unet_model_compressed.tflite")
+BIAS_MODEL_PATH = os.getenv("BIAS_MODEL_PATH", "models_unet_bias_model.keras")
 
 interpreter = None
 input_details = None
 output_details = None
+bias_model = None
 
 @app.on_event("startup")
 async def load_model():
@@ -28,6 +30,16 @@ async def load_model():
             print(f"Failed to load TFLite model: {e}")
     else:
         print(f"WARNING: {MODEL_PATH} not found. Deployments must include this file or download it.")
+        
+    global bias_model
+    if os.path.exists(BIAS_MODEL_PATH):
+        try:
+            bias_model = tf.keras.models.load_model(BIAS_MODEL_PATH, compile=False)
+            print(f"Model {BIAS_MODEL_PATH} loaded successfully!")
+        except Exception as e:
+            print(f"Failed to load Keras Bias model: {e}")
+    else:
+        print(f"WARNING: {BIAS_MODEL_PATH} not found.")
 
 class InferenceRequest(BaseModel):
     # We expect a flattened list of floats representing the 30-day temporal sequence.
@@ -38,7 +50,7 @@ class InferenceRequest(BaseModel):
     
 @app.get("/")
 def health_check():
-    return {"status": "healthy", "model_loaded": interpreter is not None}
+    return {"status": "healthy", "tflite_loaded": interpreter is not None, "bias_loaded": bias_model is not None}
 
 @app.post("/predict_unet")
 def predict(req: InferenceRequest):
@@ -82,3 +94,30 @@ def predict(req: InferenceRequest):
         return {"forecast": forecast}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
+
+@app.post("/predict_bias")
+def predict_bias(req: InferenceRequest):
+    if bias_model is None:
+        raise HTTPException(status_code=503, detail="Bias Model not loaded on server.")
+    
+    try:
+        # Dummy 7-day inference tensor: (Batch, Time, Lat, Lon, Channels)
+        input_data = np.random.rand(1, 7, 6, 8, 3).astype(np.float32)
+        
+        # Run inference
+        output_data = bias_model.predict(input_data, verbose=0)
+        # output_data shape: (1, 7, 6, 8, 1)
+        
+        # Average spatially
+        grid_mean_bias = np.mean(output_data[0, :, :, :, 0], axis=(1, 2))
+        
+        forecast_bias = []
+        for i in range(7):
+            forecast_bias.append({
+                "day": f"Day {i+1}",
+                "predicted_bias": float(round(grid_mean_bias[i], 4))
+            })
+            
+        return {"bias_correction": forecast_bias}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Bias Inference error: {str(e)}")
