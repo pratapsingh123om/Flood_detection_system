@@ -30,6 +30,8 @@ export interface TestDataPoint {
 export interface PredictionPayload {
   model: string;
   location: string;
+  timeframe?: string;
+  baseline_model?: string;
   runoff: number;
   elevation: number;
   drainage: number;

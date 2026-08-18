@@ -8,7 +8,7 @@ import os
 from ml.load_model import load_ml_model
 from ml.preprocess import preprocess_dataset
 
-def fetch_cmip6_data(lat: float, lon: float, start_date: str, end_date: str) -> pd.DataFrame:
+def fetch_cmip6_data(lat: float, lon: float, start_date: str, end_date: str, baseline_model: str = "MPI_ESM1_2_XR") -> pd.DataFrame:
     """
     Fetches SSP5-8.5 climate projection data from OpenMeteo Climate API.
     Uses MPI_ESM1_2_XR which provides daily temperature, precipitation, wind speed.
@@ -19,7 +19,7 @@ def fetch_cmip6_data(lat: float, lon: float, start_date: str, end_date: str) -> 
         'longitude': lon,
         'start_date': start_date,
         'end_date': end_date,
-        'models': 'MPI_ESM1_2_XR', # High resolution SSP5-8.5 model
+        'models': baseline_model, # High resolution SSP5-8.5 model
         'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max'
     }
     
@@ -36,7 +36,7 @@ def fetch_cmip6_data(lat: float, lon: float, start_date: str, end_date: str) -> 
     df = pd.DataFrame(daily)
     return df
 
-def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year") -> list:
+def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year", baseline_model: str = "MPI_ESM1_2_XR") -> list:
     """
     Predicts extreme weather events using CMIP6 baseline data for specific timeframes.
     """
@@ -55,7 +55,7 @@ def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year
         viz_start = "2027-07-01"
         viz_end = "2027-08-31"
     
-    df_raw = fetch_cmip6_data(lat, lon, start_date, end_date)
+    df_raw = fetch_cmip6_data(lat, lon, start_date, end_date, baseline_model)
     
     # Map CMIP6 variables to our pipeline's expected base variables
     df = pd.DataFrame()

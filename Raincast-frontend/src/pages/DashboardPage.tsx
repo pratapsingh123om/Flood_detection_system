@@ -28,6 +28,7 @@ export default function DashboardPage() {
   const [model, setModel] = useState('attention-lstm')
   const [timeframe, setTimeframe] = useState<string>('test')
   const [showOpenMeteo, setShowOpenMeteo] = useState(false)
+  const [baselineModel, setBaselineModel] = useState("MPI_ESM1_2_XR")
   const [runoff, setRunoff] = useState(62)
   const [elevation, setElevation] = useState(531)
   const [drainage, setDrainage] = useState(78)
@@ -39,6 +40,44 @@ export default function DashboardPage() {
   const [riskAreas, setRiskAreas] = useState<any[]>([])
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
   const [mapCenter, setMapCenter] = useState<[number, number]>([22.7196, 75.8577])
+
+  const comparativeMetrics = useMemo(() => {
+    if (timeframe === 'test' || !forecastData || forecastData.length === 0) return null;
+    
+    let totalActual = 0;
+    let totalPredicted = 0;
+    let sumSquaredError = 0;
+    let maxActual = 0;
+    let maxPredicted = 0;
+
+    for (const d of forecastData) {
+      totalActual += d.actual;
+      totalPredicted += d.predicted;
+      sumSquaredError += Math.pow(d.predicted - d.actual, 2);
+      if (d.actual > maxActual) maxActual = d.actual;
+      if (d.predicted > maxPredicted) maxPredicted = d.predicted;
+    }
+
+    const n = forecastData.length;
+    const rmse = Math.sqrt(sumSquaredError / n).toFixed(1);
+    const deviationPct = totalActual > 0 ? (((totalPredicted - totalActual) / totalActual) * 100).toFixed(1) : "0.0";
+    const peakSuppression = (maxActual - maxPredicted).toFixed(1);
+    
+    let sumAbsError = 0;
+    for (const d of forecastData) {
+      sumAbsError += Math.abs(d.predicted - d.actual);
+    }
+    const mae = sumAbsError / n;
+    const meanActual = totalActual / n;
+    const matchingPct = meanActual > 0 ? Math.max(0, 100 - ((mae / meanActual) * 100)).toFixed(1) : "0.0";
+
+    return [
+      { label: "Total Deviation", val: `${deviationPct > 0 ? '+' : ''}${deviationPct}%`, color: parseFloat(deviationPct) > 0 ? C.red : C.green },
+      { label: "Deviation RMSE", val: `${rmse}mm`, color: C.amber },
+      { label: "Peak Suppress", val: `${peakSuppression > 0 ? '-' : '+'}${Math.abs(parseFloat(peakSuppression)).toFixed(1)}mm`, color: C.cyan },
+      { label: "Matching", val: `${matchingPct}%`, color: C.purple },
+    ];
+  }, [forecastData, timeframe]);
 
   useEffect(() => {
     if (!location) return
@@ -81,6 +120,7 @@ export default function DashboardPage() {
           location,
           model,
           timeframe,
+          baseline_model: baselineModel,
           runoff,
           elevation,
           drainage
@@ -102,7 +142,7 @@ export default function DashboardPage() {
     }, 500)
     
     return () => clearTimeout(timeoutId)
-  }, [location, model, timeframe, runoff, elevation, drainage])
+  }, [location, model, timeframe, baselineModel, runoff, elevation, drainage])
 
   return (
     <div style={{ background: C.bg, color: C.text, minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -299,6 +339,34 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* Global Climate Baseline */}
+            {timeframe !== 'test' && (
+              <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
+                <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 10px', color: C.muted, letterSpacing: '0.05em' }}>GLOBAL CLIMATE BASELINE</p>
+                <select
+                  value={baselineModel}
+                  onChange={e => setBaselineModel(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 14px',
+                    background: C.surface, border: `1px solid ${C.borderBright}`,
+                    borderRadius: 8, color: C.purple, fontSize: 13,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    outline: 'none', cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a277ff' stroke-width='1.5'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 14px center',
+                  }}
+                >
+                  <option value="MPI_ESM1_2_XR">MPI-ESM1-2-XR (Germany)</option>
+                  <option value="GFDL_ESM4">GFDL-ESM4 (USA)</option>
+                  <option value="FGOALS_f3_H">FGOALS-f3-H (China)</option>
+                  <option value="EC_Earth3P_HR">EC-Earth3P-HR (Europe)</option>
+                  <option value="MRI_AGCM3_2_S">MRI-AGCM3-2-S (Japan)</option>
+                </select>
+              </div>
+            )}
+
             {/* Performance metrics */}
             {timeframe === 'test' && (
               <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
@@ -307,6 +375,21 @@ export default function DashboardPage() {
                   {metrics.map(m => (
                     <div key={m.label} style={{ padding: '8px', borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, textAlign: 'center' }}>
                       <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.dim, margin: '0 0 2px', letterSpacing: '0.05em' }}>{m.label}</p>
+                      <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 14, color: m.color, margin: 0 }}>{m.val}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Comparative metrics */}
+            {timeframe !== 'test' && comparativeMetrics && (
+              <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
+                <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 12px', color: C.purple, letterSpacing: '0.05em' }}>COMPARATIVE METRICS</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                  {comparativeMetrics.map(m => (
+                    <div key={m.label} style={{ padding: '8px', borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, textAlign: 'center' }}>
+                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.dim, margin: '0 0 2px', letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.label}</p>
                       <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 14, color: m.color, margin: 0 }}>{m.val}</p>
                     </div>
                   ))}
