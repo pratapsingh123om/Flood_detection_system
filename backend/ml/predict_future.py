@@ -79,7 +79,7 @@ def predict_next_30_days(model_name: str, location: str, days: int = 30, start_d
         proc_tail = preprocess_dataset(tail_df)
         
         # Extract features for the very last row (the one we just added)
-        feature_cols = [c for c in proc_tail.columns if c not in ['date', 'rainfall_mm']]
+        feature_cols = [c for c in proc_tail.columns if c not in ['date', 'rainfall_mm', 'month', 'day']]
         X_pred = proc_tail.iloc[[-1]][feature_cols]
         
         predicted_rain = 0.0
