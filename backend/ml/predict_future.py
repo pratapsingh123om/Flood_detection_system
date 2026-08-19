@@ -6,9 +6,9 @@ import logging
 from ml.load_model import load_ml_model
 from ml.preprocess import preprocess_dataset
 
-def predict_next_30_days(model_name: str, location: str, days: int = 30) -> list:
+def predict_next_30_days(model_name: str, location: str, days: int = 30, start_date_str: str = None) -> list:
     """
-    Autoregressively predicts rainfall for the next `days` starting from the end of the test dataset.
+    Autoregressively predicts rainfall for the next `days` starting from the end of the test dataset or a given date.
     """
     model = load_ml_model(model_name)
     if not model:
@@ -28,28 +28,47 @@ def predict_next_30_days(model_name: str, location: str, days: int = 30) -> list
         )
         df = df.sort_values('date').reset_index(drop=True)
         
+    # Precompute seasonal averages from historical data for all atmospheric variables
+    df['month'] = df['date'].dt.month
+    df['day'] = df['date'].dt.day
+    seasonal_avg = df.groupby(['month', 'day']).mean(numeric_only=True).reset_index()
+    
     results = []
+    
+    # Initialize the starting date for the simulation
+    current_sim_date = df.iloc[-1]['date']
+    if start_date_str:
+        current_sim_date = pd.to_datetime(start_date_str) - datetime.timedelta(days=1)
     
     # We will simulate `days` future days
     for i in range(days):
         last_row = df.iloc[-1].copy()
-        next_date = last_row['date'] + datetime.timedelta(days=1)
+        next_date = current_sim_date + datetime.timedelta(days=1)
+        current_sim_date = next_date
         
         # Create new dummy row copying atmospheric variables from yesterday
         new_row = last_row.copy()
         new_row['date'] = next_date
         new_row['rainfall_mm'] = 0.0 # Placeholder
         
-        # Add slight natural drift/noise to prevent feature stagnation and 0.0 flatlining
-        if 'tmax_degC' in new_row and pd.notna(new_row['tmax_degC']):
-            new_row['tmax_degC'] += np.random.normal(0, 0.5)
-            new_row['tmin_degC'] = min(new_row['tmin_degC'] + np.random.normal(0, 0.5), new_row['tmax_degC'] - 1.0)
-            
-        if 'humidity_pct' in new_row and pd.notna(new_row['humidity_pct']):
-            new_row['humidity_pct'] = min(100.0, max(40.0, new_row['humidity_pct'] + np.random.normal(0, 2.0)))
-            
-        if 'wind_speed_ms' in new_row and pd.notna(new_row['wind_speed_ms']):
-            new_row['wind_speed_ms'] = max(0.0, new_row['wind_speed_ms'] + np.random.normal(0, 0.5))
+        # Inject historical seasonal averages for this specific day of the year
+        # This allows the AI to predict independently using purely 1950-2025 climatic trends!
+        season_stats = seasonal_avg[(seasonal_avg['month'] == next_date.month) & (seasonal_avg['day'] == next_date.day)]
+        if not season_stats.empty:
+            season_stats = season_stats.iloc[0]
+            if 'tmax_degC' in new_row:
+                new_row['tmax_degC'] = season_stats['tmax_degC'] + np.random.normal(0, 0.5)
+            if 'tmin_degC' in new_row:
+                new_row['tmin_degC'] = season_stats['tmin_degC'] + np.random.normal(0, 0.5)
+            if 'humidity_pct' in new_row:
+                new_row['humidity_pct'] = season_stats['humidity_pct'] + np.random.normal(0, 1.0)
+            if 'wind_speed_ms' in new_row:
+                new_row['wind_speed_ms'] = season_stats['wind_speed_ms'] + np.random.normal(0, 0.2)
+            if 'surface_pressure_hpa' in new_row and 'surface_pressure_hpa' in season_stats:
+                new_row['surface_pressure_hpa'] = season_stats['surface_pressure_hpa']
+            if 'radiation_wm2' in new_row and 'radiation_wm2' in season_stats:
+                new_row['radiation_wm2'] = season_stats['radiation_wm2']
+        
         
         # We append to df
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)

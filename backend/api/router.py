@@ -63,7 +63,8 @@ def get_prediction(request: PredictionRequest):
             
             if request.timeframe in ["year", "month"]:
                 test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-                ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation))
+                start_str = "2027-08-15" if request.timeframe == "month" else "2027-07-01"
+                ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation), start_date_str=start_str)
                 for i, d in enumerate(test_evaluation):
                     if i < len(ai_preds):
                         d['predicted'] = ai_preds[i]['our_prediction']
@@ -132,7 +133,8 @@ def get_prediction(request: PredictionRequest):
             # Use baseline for the historical evaluation charts
             if request.timeframe in ["year", "month"]:
                 test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-                ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation))
+                start_str = "2027-08-15" if request.timeframe == "month" else "2027-07-01"
+                ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation), start_date_str=start_str)
                 for i, d in enumerate(test_evaluation):
                     if i < len(ai_preds):
                         d['predicted'] = ai_preds[i]['our_prediction']
@@ -157,7 +159,8 @@ def get_prediction(request: PredictionRequest):
         if request.timeframe in ["year", "month"]:
             if request.model not in ["unet_lstm_bias", "unet_rf_bias", "unet_bias_model"]:
                 test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-                ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation))
+                start_str = "2027-08-15" if request.timeframe == "month" else "2027-07-01"
+                ai_preds = predict_next_30_days(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, days=len(test_evaluation), start_date_str=start_str)
                 for i, d in enumerate(test_evaluation):
                     if i < len(ai_preds):
                         d['predicted'] = ai_preds[i]['our_prediction']
