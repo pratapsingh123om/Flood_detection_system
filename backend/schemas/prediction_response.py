@@ -14,6 +14,7 @@ class TestDataPoint(BaseModel):
     predicted: float
     threshold: float
     openmeteo: float | None = None
+    default_cmip: float | None = None
 
 class PredictionResponse(BaseModel):
     test_data: List[TestDataPoint]
