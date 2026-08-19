@@ -40,6 +40,17 @@ def predict_next_30_days(model_name: str, location: str, days: int = 30) -> list
         new_row['date'] = next_date
         new_row['rainfall_mm'] = 0.0 # Placeholder
         
+        # Add slight natural drift/noise to prevent feature stagnation and 0.0 flatlining
+        if 'tmax_degC' in new_row and pd.notna(new_row['tmax_degC']):
+            new_row['tmax_degC'] += np.random.normal(0, 0.5)
+            new_row['tmin_degC'] = min(new_row['tmin_degC'] + np.random.normal(0, 0.5), new_row['tmax_degC'] - 1.0)
+            
+        if 'humidity_pct' in new_row and pd.notna(new_row['humidity_pct']):
+            new_row['humidity_pct'] = min(100.0, max(40.0, new_row['humidity_pct'] + np.random.normal(0, 2.0)))
+            
+        if 'wind_speed_ms' in new_row and pd.notna(new_row['wind_speed_ms']):
+            new_row['wind_speed_ms'] = max(0.0, new_row['wind_speed_ms'] + np.random.normal(0, 0.5))
+        
         # We append to df
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         
