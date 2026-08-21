@@ -1,0 +1,419 @@
+{
+  "test_data": [
+    {
+      "date": "01-Jul",
+      "actual": 6.5,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "02-Jul",
+      "actual": 24.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "03-Jul",
+      "actual": 10.9,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "04-Jul",
+      "actual": 20.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "05-Jul",
+      "actual": 10.3,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "06-Jul",
+      "actual": 6.3,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "07-Jul",
+      "actual": 17.4,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "08-Jul",
+      "actual": 17.9,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "09-Jul",
+      "actual": 3.7,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "10-Jul",
+      "actual": 0.7,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "11-Jul",
+      "actual": 0.5,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "12-Jul",
+      "actual": 0.4,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "13-Jul",
+      "actual": 0.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "14-Jul",
+      "actual": 0.1,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "15-Jul",
+      "actual": 0.9,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "16-Jul",
+      "actual": 0.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "17-Jul",
+      "actual": 1.5,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "18-Jul",
+      "actual": 0.5,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "19-Jul",
+      "actual": 6.4,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "20-Jul",
+      "actual": 23.6,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "21-Jul",
+      "actual": 8.4,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "22-Jul",
+      "actual": 25.1,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "23-Jul",
+      "actual": 8.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "24-Jul",
+      "actual": 1.8,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "25-Jul",
+      "actual": 3.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "26-Jul",
+      "actual": 1.9,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "27-Jul",
+      "actual": 6.9,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "28-Jul",
+      "actual": 16.2,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "29-Jul",
+      "actual": 22.2,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "30-Jul",
+      "actual": 30.4,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "31-Jul",
+      "actual": 36.6,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "01-Aug",
+      "actual": 6.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "02-Aug",
+      "actual": 2.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "03-Aug",
+      "actual": 2.2,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "04-Aug",
+      "actual": 2.6,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "05-Aug",
+      "actual": 1.8,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "06-Aug",
+      "actual": 5.3,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "07-Aug",
+      "actual": 1.5,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "08-Aug",
+      "actual": 1.0,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "09-Aug",
+      "actual": 5.2,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "10-Aug",
+      "actual": 20.6,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    },
+    {
+      "date": "11-Aug",
+      "actual": 33.3,
+      "predicted": 0.0,
+      "threshold": 30.0,
+      "openmeteo": null
+    }
+  ],
+  "weather_forecast": [
+    {
+      "day": "Thu",
+      "temp": 29.7,
+      "rain": 6.2,
+      "icon": "\ud83c\udf26",
+      "intensity": 0.3
+    },
+    {
+      "day": "Fri",
+      "temp": 29.6,
+      "rain": 8.7,
+      "icon": "\ud83c\udf26",
+      "intensity": 0.3
+    },
+    {
+      "day": "Sat",
+      "temp": 29.4,
+      "rain": 11.2,
+      "icon": "\ud83c\udf27",
+      "intensity": 0.6
+    },
+    {
+      "day": "Sun",
+      "temp": 29.3,
+      "rain": 13.7,
+      "icon": "\ud83c\udf27",
+      "intensity": 0.6
+    },
+    {
+      "day": "Mon",
+      "temp": 29.2,
+      "rain": 16.2,
+      "icon": "\ud83c\udf27",
+      "intensity": 0.6
+    },
+    {
+      "day": "Tue",
+      "temp": 29.1,
+      "rain": 18.7,
+      "icon": "\ud83c\udf27",
+      "intensity": 0.6
+    },
+    {
+      "day": "Wed",
+      "temp": 28.9,
+      "rain": 21.2,
+      "icon": "\ud83c\udf27",
+      "intensity": 0.6
+    }
+  ],
+  "metrics": [
+    {
+      "label": "Accuracy",
+      "val": "66.7%",
+      "sub": "Overall",
+      "color": "#00d4ff"
+    },
+    {
+      "label": "CSI",
+      "val": "0.000",
+      "sub": "Critical Success",
+      "color": "#06ffa5"
+    },
+    {
+      "label": "POD",
+      "val": "0.000",
+      "sub": "Prob. of Detection",
+      "color": "#06ffa5"
+    },
+    {
+      "label": "FAR",
+      "val": "0.000",
+      "sub": "False Alarm Rate",
+      "color": "#f59e0b"
+    },
+    {
+      "label": "RMSE",
+      "val": "13.8mm",
+      "sub": "Error",
+      "color": "#7c5af5"
+    },
+    {
+      "label": "MAE",
+      "val": "9.4mm",
+      "sub": "Abs Error",
+      "color": "#00d4ff"
+    }
+  ],
+  "risk_areas": [
+    {
+      "name": "Narmada Basin",
+      "district": "Hoshangabad",
+      "score": 94,
+      "pop": "2.4M"
+    },
+    {
+      "name": "Shipra River Zone",
+      "district": "Ujjain",
+      "score": 87,
+      "pop": "892K"
+    },
+    {
+      "name": "Khan River Corridor",
+      "district": "Indore",
+      "score": 81,
+      "pop": "3.1M"
+    },
+    {
+      "name": "Betwa Catchment",
+      "district": "Vidisha",
+      "score": 76,
+      "pop": "1.2M"
+    },
+    {
+      "name": "Chambal Valley",
+      "district": "Morena",
+      "score": 71,
+      "pop": "654K"
+    }
+  ]
+}

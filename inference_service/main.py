@@ -3,18 +3,29 @@ from pydantic import BaseModel
 import numpy as np
 import tensorflow as tf
 import os
-from typing import List
+import joblib
+import pandas as pd
+from typing import List, Dict, Any
 
 app = FastAPI(title="RainCast Inference Microservice")
+
+# Custom loss functions for unpickling
+def moderated_asymmetric_loss(y_true, y_pred): pass
+def asymmetric_heavy_rain_loss(y_true, y_pred): pass
+import __main__
+setattr(__main__, "moderated_asymmetric_loss", moderated_asymmetric_loss)
+setattr(__main__, "asymmetric_heavy_rain_loss", asymmetric_heavy_rain_loss)
 
 # Load TFLite Model
 MODEL_PATH = os.getenv("MODEL_PATH", "unet_model_compressed.tflite")
 BIAS_MODEL_PATH = os.getenv("BIAS_MODEL_PATH", "models_unet_bias_model.keras")
+TABULAR_MODELS_DIR = os.getenv("TABULAR_MODELS_DIR", "../models/Models_new")
 
 interpreter = None
 input_details = None
 output_details = None
 bias_model = None
+loaded_tabular_models = {}
 
 @app.on_event("startup")
 async def load_model():
@@ -28,9 +39,7 @@ async def load_model():
             print(f"Model {MODEL_PATH} loaded successfully!")
         except Exception as e:
             print(f"Failed to load TFLite model: {e}")
-    else:
-        print(f"WARNING: {MODEL_PATH} not found. Deployments must include this file or download it.")
-        
+            
     global bias_model
     if os.path.exists(BIAS_MODEL_PATH):
         try:
@@ -38,15 +47,27 @@ async def load_model():
             print(f"Model {BIAS_MODEL_PATH} loaded successfully!")
         except Exception as e:
             print(f"Failed to load Keras Bias model: {e}")
-    else:
-        print(f"WARNING: {BIAS_MODEL_PATH} not found.")
+
+    # Pre-load tabular models
+    if os.path.exists(TABULAR_MODELS_DIR):
+        print(f"Loading tabular models from {TABULAR_MODELS_DIR}...")
+        for file in os.listdir(TABULAR_MODELS_DIR):
+            if file.endswith(".pkl") or file.endswith(".joblib"):
+                model_name = file.split(".")[0]
+                try:
+                    loaded_tabular_models[model_name] = joblib.load(os.path.join(TABULAR_MODELS_DIR, file))
+                    print(f"Loaded tabular model: {model_name}")
+                except Exception as e:
+                    print(f"Failed to load {file}: {e}")
 
 class InferenceRequest(BaseModel):
-    # We expect a flattened list of floats representing the 30-day temporal sequence.
-    # Alternatively, the gateway can just pass metadata and this service fetches real-time data,
-    # but for simplicity, we let the gateway pass the tensor data.
-    # However, since the tensor is huge, for a 7-day forecast, we just simulate the tensor based on location if data isn't provided.
     location: str
+
+class TabularInferenceRequest(BaseModel):
+    model_name: str
+    features: List[Dict[str, Any]]
+
+
     
 @app.get("/")
 def health_check():
@@ -121,3 +142,46 @@ def predict_bias(req: InferenceRequest):
         return {"bias_correction": forecast_bias}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Bias Inference error: {str(e)}")
+
+@app.post("/predict/tabular")
+def predict_tabular(req: TabularInferenceRequest):
+    model = loaded_tabular_models.get(req.model_name)
+    if model is None:
+        raise HTTPException(status_code=404, detail=f"Model {req.model_name} not found on server.")
+        
+    try:
+        df = pd.DataFrame(req.features)
+        predictions = []
+        
+        for i in range(len(df)):
+            row = df.iloc[[i]]
+            predicted_rain = 0.0
+            
+            if isinstance(model, dict):
+                clf = model.get("clf") or model.get("stage1_clf")
+                
+                if "stage3a_reg" in model and "stage2_extreme_clf" in model:
+                    thresh = model.get("optimal_T_rain", 0.45)
+                    prob = clf.predict_proba(row)[0, 1]
+                    if prob < thresh:
+                        predicted_rain = 0.0
+                    else:
+                        ext_prob = model["stage2_extreme_clf"].predict_proba(row)[0, 1]
+                        if ext_prob > 0.35:
+                            predicted_rain = model["stage3b_extreme_reg"].predict(row)[0] * 1.10
+                        else:
+                            predicted_rain = model["stage3a_reg"].predict(row)[0]
+                else:
+                    reg = model.get("reg") or model.get("stage2_asym_reg") or model.get("stage2_reg")
+                    thresh = model.get("threshold", 0.45)
+                    prob = clf.predict_proba(row)[0, 1]
+                    predicted_rain = reg.predict(row)[0] if prob >= thresh else 0.0
+            else:
+                pred = model.predict(row)
+                predicted_rain = float(pred[0]) if isinstance(pred, (list, np.ndarray)) else float(pred)
+                
+            predictions.append(max(0.0, float(predicted_rain)))
+            
+        return {"predictions": predictions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Tabular Inference error: {str(e)}")

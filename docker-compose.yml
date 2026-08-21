@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - INFERENCE_URL=http://inference_service:8000
+    depends_on:
+      - inference_service
+    volumes:
+      - ./backend:/app/backend
+
+  inference_service:
+    build:
+      context: .
+      dockerfile: inference_service/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - TABULAR_MODELS_DIR=/models/Models_new
+    volumes:
+      - ./inference_service:/app
+      - ./models:/models

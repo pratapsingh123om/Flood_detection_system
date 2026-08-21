@@ -3,17 +3,15 @@ import numpy as np
 import os
 import datetime
 import logging
-from ml.load_model import load_ml_model
+import requests
 from ml.preprocess import preprocess_dataset
+
+INFERENCE_URL = os.getenv("INFERENCE_URL", "http://localhost:8000")
 
 def predict_next_30_days(model_name: str, location: str, days: int = 30, start_date_str: str = None) -> list:
     """
     Autoregressively predicts rainfall for the next `days` starting from the end of the test dataset or a given date.
     """
-    model = load_ml_model(model_name)
-    if not model:
-        return []
-        
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     historical_csv = os.path.join(base_dir, "Data", "data", "indore-rainfall-data.csv")
     test_csv = os.path.join(base_dir, "Data", "data", "july_data", "indore-rainfall-data-test.csv")
@@ -84,35 +82,15 @@ def predict_next_30_days(model_name: str, location: str, days: int = 30, start_d
         
         predicted_rain = 0.0
         try:
-            if isinstance(model, dict):
-                clf = model.get("clf") or model.get("stage1_clf")
-                
-                if "stage3a_reg" in model and "stage2_extreme_clf" in model:
-                    # 3-stage extreme pipeline
-                    thresh = model.get("optimal_T_rain", 0.45)
-                    prob = clf.predict_proba(X_pred)[0, 1]
-                    if prob < thresh:
-                        predicted_rain = 0.0
-                    else:
-                        ext_prob = model["stage2_extreme_clf"].predict_proba(X_pred)[0, 1]
-                        # Lower threshold from default 0.5 to 0.35 to catch more extreme events 
-                        if ext_prob > 0.35:
-                            predicted_rain = model["stage3b_extreme_reg"].predict(X_pred)[0]
-                            predicted_rain *= 1.10 # Add a 10% safety buffer for flood forecasting
-                        else:
-                            predicted_rain = model["stage3a_reg"].predict(X_pred)[0]
-                else:
-                    # 2-stage standard pipeline
-                    reg = model.get("reg") or model.get("stage2_asym_reg") or model.get("stage2_reg")
-                    thresh = model.get("threshold", 0.45)
-                    prob = clf.predict_proba(X_pred)[0, 1]
-                    raw_pred = reg.predict(X_pred)[0]
-                    predicted_rain = raw_pred if prob >= thresh else 0.0
+            res = requests.post(
+                f"{INFERENCE_URL}/predict/tabular",
+                json={"model_name": model_name, "features": [X_pred.iloc[0].to_dict()]},
+                timeout=5
+            )
+            if res.status_code == 200:
+                predicted_rain = res.json().get("predictions", [0.0])[0]
             else:
-                pred = model.predict(X_pred)
-                predicted_rain = float(pred[0]) if isinstance(pred, (list, np.ndarray)) else float(pred)
-                
-            predicted_rain = max(0.0, predicted_rain)
+                logging.error(f"Inference Service failed: {res.text}")
         except Exception as e:
             logging.warning(f"Future prediction failed on {next_date}: {e}")
             predicted_rain = 0.0

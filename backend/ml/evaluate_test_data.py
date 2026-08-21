@@ -3,8 +3,9 @@ import numpy as np
 import logging
 import os
 import requests
-from ml.load_model import load_ml_model
 from ml.preprocess import preprocess_dataset
+
+INFERENCE_URL = os.getenv("INFERENCE_URL", "http://localhost:8000")
 
 def fetch_historical_2026(lat=22.7196, lon=75.8577, start_date="2026-06-01", end_date="2026-08-19"):
     # To keep dashboard fast, we will only fetch the critical monsoon months (June-August 2026)
@@ -40,9 +41,8 @@ def fetch_historical_2026(lat=22.7196, lon=75.8577, start_date="2026-06-01", end
 
 def evaluate_test_data(model_name: str) -> list:
     """
-    Evaluates the 2026 out-of-sample real-world dataset (June - Aug 2026) using the specified model.
+    Evaluates the 2026 out-of-sample real-world dataset (June - Aug 2026) using the Inference Service.
     """
-    model = load_ml_model(model_name)
     df_raw = fetch_historical_2026()
     
     if df_raw.empty:
@@ -67,46 +67,33 @@ def evaluate_test_data(model_name: str) -> list:
     df_proc = preprocess_dataset(df)
     feature_cols = [c for c in df_proc.columns if c not in ['date', 'rainfall_mm', 'month', 'day']]
     
-    results = []
-    
+    features_payload = []
     for i in range(len(df_proc)):
         row = df_proc.iloc[i]
-        X_pred = pd.DataFrame([row[feature_cols]])
+        features_payload.append(row[feature_cols].to_dict())
+        
+    try:
+        res = requests.post(
+            f"{INFERENCE_URL}/predict/tabular",
+            json={"model_name": model_name, "features": features_payload},
+            timeout=15
+        )
+        if res.status_code != 200:
+            logging.error(f"Inference Service failed: {res.text}")
+            predicted_rainfalls = [0.0] * len(df_proc)
+        else:
+            predicted_rainfalls = res.json().get("predictions", [0.0] * len(df_proc))
+    except Exception as e:
+        logging.error(f"Failed to connect to Inference Service: {e}")
+        predicted_rainfalls = [0.0] * len(df_proc)
+    
+    results = []
+    for i in range(len(df_proc)):
+        row = df_proc.iloc[i]
         date_str = row['date'].strftime("%d-%b")
         actual_rain = float(row['rainfall_mm'])
+        predicted_rain = predicted_rainfalls[i]
         
-        predicted_rain = 0.0
-        
-        if model is not None:
-            try:
-                if isinstance(model, dict):
-                    clf = model.get("clf") or model.get("stage1_clf")
-                    
-                    if "stage3a_reg" in model and "stage2_extreme_clf" in model:
-                        thresh = model.get("optimal_T_rain", 0.45)
-                        prob = clf.predict_proba(X_pred)[0, 1]
-                        if prob < thresh:
-                            predicted_rain = 0.0
-                        else:
-                            ext_prob = model["stage2_extreme_clf"].predict_proba(X_pred)[0, 1]
-                            if ext_prob > 0.35:
-                                predicted_rain = model["stage3b_extreme_reg"].predict(X_pred)[0] * 1.10
-                            else:
-                                predicted_rain = model["stage3a_reg"].predict(X_pred)[0]
-                    else:
-                        reg = model.get("reg") or model.get("stage2_asym_reg") or model.get("stage2_reg")
-                        thresh = model.get("threshold", 0.45)
-                        prob = clf.predict_proba(X_pred)[0, 1]
-                        predicted_rain = reg.predict(X_pred)[0] if prob >= thresh else 0.0
-                else:
-                    pred = model.predict(X_pred)
-                    predicted_rain = float(pred[0]) if isinstance(pred, (list, np.ndarray)) else float(pred)
-                    
-                predicted_rain = max(0.0, predicted_rain)
-            except Exception as e:
-                logging.warning(f"Prediction failed on {date_str}: {e}")
-                predicted_rain = 0.0
-                
         results.append({
             "date": date_str,
             "actual": round(actual_rain, 1),
