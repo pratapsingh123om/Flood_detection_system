@@ -33,6 +33,7 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
         
         predicted_rain = 0.0
         predicted_temp = 30.0
+        is_fallback = False
         
         if X_latest is not None and i < len(X_latest):
             try:
@@ -48,6 +49,7 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
                 else:
                     logging.error(f"Inference Service failed: {res.text}")
                     predicted_rain = 0.0
+                    is_fallback = True
                         
                 predicted_rain = max(0.0, float(predicted_rain))
                 predicted_temp = float(row['tmax_degC'].values[0]) if 'tmax_degC' in row else 30.0
@@ -55,8 +57,10 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
             except Exception as e:
                 logging.warning(f"Prediction failed on day {i}: {str(e)}")
                 predicted_rain = (runoff * 0.1) + (i * 2.5)
+                is_fallback = True
         else:
             predicted_rain = (runoff * 0.1) + (i * 2.5)
+            is_fallback = True
             
         # Determine icon based on rain
         icon = '🌤'
@@ -76,7 +80,8 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
             "temp": round(predicted_temp - (predicted_rain * 0.05), 1),
             "rain": round(predicted_rain, 1),
             "icon": icon,
-            "intensity": intensity
+            "intensity": intensity,
+            "is_fallback": is_fallback
         })
         
     return predictions

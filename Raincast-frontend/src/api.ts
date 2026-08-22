@@ -4,6 +4,7 @@ export interface ForecastDay {
   rain: number;
   icon: string;
   intensity: number;
+  is_fallback?: boolean;
 }
 
 export interface Metric {
@@ -51,7 +52,7 @@ export interface ModelInfo {
 }
 
 export async function fetchAvailableModels(): Promise<ModelInfo[]> {
-  const response = await fetch("https://raincast-backend-fqrk.onrender.com/api/models");
+  const response = await fetch("https://btp-flood-detection-system-775429752478.europe-west1.run.app");
   if (!response.ok) {
     throw new Error(`API error: ${response.statusText}`);
   }

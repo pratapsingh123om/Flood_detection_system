@@ -281,7 +281,17 @@ export default function DashboardPage() {
                     background: `rgba(0,212,255,${day.intensity * 0.12})`,
                     border: `1px solid rgba(0,212,255,${0.1 + day.intensity * 0.2})`,
                     backdropFilter: 'blur(8px)',
+                    position: 'relative'
                   }}>
+                    {/* AI Status Flag */}
+                    <div 
+                      title={day.is_fallback ? "Using fallback cache (AI Inference failed or loading)" : "AI Predicted"}
+                      style={{
+                        position: 'absolute', top: 4, right: 4, width: 6, height: 6, borderRadius: '50%',
+                        background: day.is_fallback ? '#f5a623' : '#2ecc71',
+                        boxShadow: `0 0 5px ${day.is_fallback ? '#f5a623' : '#2ecc71'}`
+                      }}
+                    />
                     <p style={{ fontSize: 9, color: C.muted, margin: '0 0 4px', fontFamily: "'JetBrains Mono', monospace" }}>{day.day}</p>
                     <p style={{ fontSize: 18, margin: '0 0 4px' }}>{day.icon}</p>
                     <p style={{ fontSize: 11, fontWeight: 700, color: C.cyan, margin: '0 0 2px', fontFamily: "'Exo 2', sans-serif" }}>{day.rain}mm</p>
