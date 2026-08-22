@@ -52,7 +52,7 @@ export interface ModelInfo {
 }
 
 export async function fetchAvailableModels(): Promise<ModelInfo[]> {
-  const response = await fetch("https://btp-flood-detection-system-775429752478.europe-west1.run.app");
+  const response = await fetch("https://btp-flood-detection-system-775429752478.europe-west1.run.app/api/models");
   if (!response.ok) {
     throw new Error(`API error: ${response.statusText}`);
   }
@@ -61,7 +61,7 @@ export async function fetchAvailableModels(): Promise<ModelInfo[]> {
 }
 
 export async function getPrediction(payload: PredictionPayload): Promise<PredictionResponse> {
-  const response = await fetch("https://raincast-backend-fqrk.onrender.com/api/predict", {
+  const response = await fetch("https://btp-flood-detection-system-775429752478.europe-west1.run.app/api/predict", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
