@@ -5,7 +5,9 @@ import {
 } from 'recharts'
 import { MapContainer, TileLayer, Circle, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
-import { getPrediction, fetchAvailableModels, ModelInfo } from '../api'
+import { getPrediction, fetchAvailableModels, ModelInfo, WardFloodRisk } from '../api'
+import { PersonaToggle } from '../components/PersonaToggle'
+import { WardMapContainer } from '../components/WardMapContainer'
 
 const C = {
   cyan: '#00d4ff',
@@ -27,17 +29,18 @@ export default function DashboardPage() {
   const [location, setLocation] = useState('Indore, Madhya Pradesh')
   const [model, setModel] = useState('unet_lstm_bias')
   const [timeframe, setTimeframe] = useState<string>('test')
-  const [showOpenMeteo, setShowOpenMeteo] = useState(false)
+  const [persona, setPersona] = useState<'hydrologist' | 'planner'>('planner')
   const [baselineModel, setBaselineModel] = useState("MPI_ESM1_2_XR")
-  const [runoff, setRunoff] = useState(62)
+  const [runoff, setRunoff] = useState(0.45)
   const [elevation, setElevation] = useState(531)
-  const [drainage, setDrainage] = useState(78)
+  const [drainage, setDrainage] = useState(65)
   
   const [loading, setLoading] = useState(false)
   const [forecastData, setForecastData] = useState<any[]>([])
   const [weatherForecast, setWeatherForecast] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
   const [riskAreas, setRiskAreas] = useState<any[]>([])
+  const [wardRisks, setWardRisks] = useState<WardFloodRisk[]>([])
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
   const [mapCenter, setMapCenter] = useState<[number, number]>([22.7196, 75.8577])
 
@@ -101,7 +104,6 @@ export default function DashboardPage() {
       try {
         const models = await fetchAvailableModels()
         setAvailableModels(models)
-        // If the current model isn't in the list, default to the first one
         if (models.length > 0 && !models.find(m => m.id === model)) {
           setModel(models[0].id)
         }
@@ -123,12 +125,16 @@ export default function DashboardPage() {
           baseline_model: baselineModel,
           runoff,
           elevation,
-          drainage
+          drainage,
+          persona
         })
         setForecastData(data.test_data)
         setWeatherForecast(data.weather_forecast)
         setMetrics(data.metrics)
         setRiskAreas(data.risk_areas)
+        if (data.ward_risks) {
+          setWardRisks(data.ward_risks)
+        }
       } catch (err) {
         console.error("Failed to load prediction data", err)
       } finally {
@@ -136,20 +142,20 @@ export default function DashboardPage() {
       }
     }
     
-    // Add a small debounce or direct call (for simplicity direct call)
     const timeoutId = setTimeout(() => {
       loadData()
     }, 500)
     
     return () => clearTimeout(timeoutId)
-  }, [location, model, timeframe, baselineModel, runoff, elevation, drainage])
+  }, [location, model, timeframe, baselineModel, runoff, elevation, drainage, persona])
 
   return (
     <div style={{ background: C.bg, color: C.text, minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
 
-      {/* Top search bar */}
+      {/* Top search bar & Persona selector */}
       <div style={{ padding: '16px 24px', borderBottom: `1px solid ${C.border}`, background: C.surface }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          
           <div style={{ position: 'relative', flex: 1, maxWidth: 480 }}>
             <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.cyan }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -169,6 +175,10 @@ export default function DashboardPage() {
               onBlur={e => (e.target.style.borderColor = C.border)}
             />
           </div>
+
+          {/* Persona Switcher Component */}
+          <PersonaToggle persona={persona} onToggle={setPersona} />
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: loading ? C.amber : C.green, boxShadow: `0 0 8px ${loading ? C.amber : C.green}`, display: 'inline-block' }} />
             <span style={{ fontSize: 12, color: C.muted, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -182,21 +192,22 @@ export default function DashboardPage() {
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: 20 }}>
 
-          {/* Left — Map */}
+          {/* Left Panel — Dynamic Map / Ward Inundation View */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            
+            {/* Top Leaflet Map Container */}
             <div style={{
               borderRadius: 14, overflow: 'hidden',
               border: `1px solid ${C.borderBright}`,
               background: C.panel,
-              height: 460,
+              height: 380,
               position: 'relative',
               boxShadow: `0 0 40px rgba(0,212,255,0.08)`,
             }}>
-              {/* Live Interactive Map */}
               <MapContainer center={mapCenter} zoom={11} style={{ position: 'absolute', inset: 0, borderRadius: 14, zIndex: 1 }}>
                 <TileLayer
                   url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  attribution='&copy; OpenStreetMap contributors'
                 />
                 <MapUpdater center={mapCenter} />
                 {forecastData.length > 0 && (
@@ -211,21 +222,32 @@ export default function DashboardPage() {
                   />
                 )}
               </MapContainer>
+
               <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}>
                 <div style={{ padding: '6px 12px', borderRadius: 6, background: 'rgba(4,8,15,0.85)', border: `1px solid rgba(0,212,255,0.2)`, fontSize: 11, color: C.cyan, fontFamily: "'JetBrains Mono', monospace" }}>
-                  {location.toUpperCase()}
+                  {location.toUpperCase()} · 30M SRTM DEM TOPOGRAPHY
                 </div>
               </div>
             </div>
 
-            {/* Bottom — Chart + Risk areas */}
+            {/* 85 Ward Flood Hazard Component (Emergency Planner Persona) */}
+            {wardRisks.length > 0 && (
+              <WardMapContainer wardRisks={wardRisks} />
+            )}
+
+            {/* Bottom — Recharts Evaluation & Risk Areas */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 20 }}>
+              
               {/* Chart */}
               <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                   <div>
-                    <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 15, margin: 0, marginBottom: 2 }}>{timeframe === 'month' ? "CMIP6 Climate Projection (Aug-Sep 2027)" : timeframe === 'year' ? "CMIP6 Climate Projection (Jul-Aug 2027)" : "Model Evaluation (Jul-Aug 2026)"}</p>
-                    <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>{timeframe !== 'test' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}</p>
+                    <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 15, margin: 0, marginBottom: 2 }}>
+                      {timeframe === 'month' ? "CMIP6 Climate Projection (Aug-Sep 2027)" : timeframe === 'year' ? "CMIP6 Climate Projection (Jul-Aug 2027)" : "Model Evaluation (Jul-Aug 2026)"}
+                    </p>
+                    <p style={{ fontSize: 11, color: C.muted, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>
+                      {timeframe !== 'test' ? "CMIP6 Baseline vs AI Prediction" : "Actual vs Predicted Rainfall"} · {location.split(',')[0]}
+                    </p>
                   </div>
                   <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", alignItems: 'center', flexWrap: 'wrap' }}>
                     {timeframe !== 'test' && <span style={{ color: C.cyan }}>── CMIP of India</span>}
@@ -234,6 +256,7 @@ export default function DashboardPage() {
                     {timeframe === 'test' && <span style={{ color: C.amber, opacity: 0.7 }}>- - Threshold</span>}
                   </div>
                 </div>
+
                 <ResponsiveContainer width="100%" height={180}>
                   <ComposedChart data={forecastData}>
                     <defs>
@@ -282,7 +305,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right panel */}
+          {/* Right Panel — Controls & Persona Specific Metrics */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* 7-day forecast */}
@@ -290,23 +313,22 @@ export default function DashboardPage() {
               <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 12px', color: C.muted, letterSpacing: '0.05em' }}>7-DAY RAINFALL FORECAST</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
                 {weatherForecast.map(day => (
-                  <div key={day.day} style={{
+                  <div key={day.day || day.date} style={{
                     padding: '8px 4px', borderRadius: 10, textAlign: 'center',
                     background: `rgba(0,212,255,${day.intensity * 0.12})`,
                     border: `1px solid rgba(0,212,255,${0.1 + day.intensity * 0.2})`,
                     backdropFilter: 'blur(8px)',
                     position: 'relative'
                   }}>
-                    {/* AI Status Flag */}
                     <div 
-                      title={day.is_fallback ? "Using fallback cache (AI Inference failed or loading)" : "AI Predicted"}
+                      title={day.is_fallback ? "Using fallback cache" : "AI Predicted"}
                       style={{
                         position: 'absolute', top: 4, right: 4, width: 6, height: 6, borderRadius: '50%',
                         background: day.is_fallback ? '#f5a623' : '#2ecc71',
                         boxShadow: `0 0 5px ${day.is_fallback ? '#f5a623' : '#2ecc71'}`
                       }}
                     />
-                    <p style={{ fontSize: 9, color: C.muted, margin: '0 0 4px', fontFamily: "'JetBrains Mono', monospace" }}>{day.day}</p>
+                    <p style={{ fontSize: 9, color: C.muted, margin: '0 0 4px', fontFamily: "'JetBrains Mono', monospace" }}>{day.day || day.date}</p>
                     <p style={{ fontSize: 18, margin: '0 0 4px' }}>{day.icon}</p>
                     <p style={{ fontSize: 11, fontWeight: 700, color: C.cyan, margin: '0 0 2px', fontFamily: "'Exo 2', sans-serif" }}>{day.rain}mm</p>
                     <p style={{ fontSize: 9, color: C.dim, margin: 0 }}>{day.temp}°C</p>
@@ -364,10 +386,10 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Performance metrics */}
-            {timeframe === 'test' && (
+            {/* Performance metrics (Hydrologist Persona Mode) */}
+            {persona === 'hydrologist' && timeframe === 'test' && (
               <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
-                <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 12px', color: C.muted, letterSpacing: '0.05em' }}>PERFORMANCE METRICS</p>
+                <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 12px', color: C.purple, letterSpacing: '0.05em' }}>HYDROLOGICAL & AI METRICS</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                   {metrics.map(m => (
                     <div key={m.label} style={{ padding: '8px', borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, textAlign: 'center' }}>
@@ -394,25 +416,25 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Hydrological parameters */}
+            {/* Hydrological parameters sliders */}
             <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.border}`, padding: 16 }}>
               <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 13, margin: '0 0 14px', color: C.muted, letterSpacing: '0.05em' }}>HYDROLOGICAL PARAMETERS</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Slider label="Runoff Rate" value={runoff} min={0} max={100} unit="mm/hr" color={C.cyan} onChange={setRunoff} />
-                <Slider label="Elevation (DEM)" value={elevation} min={400} max={800} unit="m" color={C.green} onChange={setElevation} />
+                <Slider label="Runoff Rate (SCS-CN)" value={Math.round(runoff * 100)} min={0} max={100} unit="%" color={C.cyan} onChange={v => setRunoff(v / 100.0)} />
+                <Slider label="Elevation (30m DEM)" value={elevation} min={400} max={800} unit="m" color={C.green} onChange={setElevation} />
                 <Slider label="Drainage Capacity" value={drainage} min={0} max={100} unit="%" color={C.amber} onChange={setDrainage} />
               </div>
             </div>
 
             {/* Key risk indicators */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-              <RiskBadge label="Population Affected" value="7.8M" icon="👥" color={C.cyan} />
+              <RiskBadge label="Population Affected" value="3.1M" icon="👥" color={C.cyan} />
               <RiskBadge 
-                label="Flood Risk Score" 
-                value={`${riskAreas.length > 0 ? Math.max(...riskAreas.map(a => a.score)) : 75}/100`} 
+                label="High Risk Wards" 
+                value={`${wardRisks.filter(w => w.risk_level === 'HIGH').length}/85`} 
                 icon="⚠" 
-                color={riskAreas.length > 0 && Math.max(...riskAreas.map(a => a.score)) > 85 ? C.red : C.amber} 
-                alert={riskAreas.length > 0 && Math.max(...riskAreas.map(a => a.score)) > 85}
+                color={wardRisks.filter(w => w.risk_level === 'HIGH').length > 5 ? C.red : C.amber} 
+                alert={wardRisks.filter(w => w.risk_level === 'HIGH').length > 5}
               />
               <RiskBadge 
                 label="Return Period" 
@@ -421,6 +443,7 @@ export default function DashboardPage() {
                 color={C.purple} 
               />
             </div>
+
           </div>
         </div>
       </div>
