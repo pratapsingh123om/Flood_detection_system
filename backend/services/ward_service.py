@@ -53,31 +53,42 @@ def calculate_ward_flood_risks(
             })
             
     for w in full_wards:
-        # Micro-topographic rain distribution factor based on elevation
-        topo_factor = 1.0 + max(-0.15, min(0.20, (560.0 - w["elev"]) / 200.0))
+        # Micro-topographic rain distribution factor based on 30m DEM elevation
+        # Low elevation areas (<545m) receive runoff accumulation from upper catchments
+        topo_factor = 1.0 + max(-0.15, min(0.35, (560.0 - w["elev"]) / 120.0))
         local_rain = round(predicted_rainfall_mm * topo_factor, 1)
         
         # SCS-CN Urban Hydrological Surface Runoff calculation (mm)
-        # Higher runoff in low-lying, urban impervious wards
-        cn_value = 88.0 # Impervious urban concrete
-        S = (25400.0 / cn_value) - 254.0
-        if local_rain > (0.2 * S):
-            local_runoff = round(((local_rain - 0.2 * S) ** 2) / (local_rain + 0.8 * S) * runoff_coeff * 1.8, 1)
-        else:
-            local_runoff = round(local_rain * runoff_coeff * 0.4, 1)
-            
-        # Net Standing Water Depth calculation (cm)
-        effective_drainage = w["drain_cap"] * drainage_eff
-        excess_water_mm = max(0.0, local_runoff - effective_drainage)
+        # Curve Number CN=88 for urban impervious concrete catchment
+        cn_value = 88.0
+        S = (25400.0 / cn_value) - 254.0 # S ~ 34.63 mm
+        initial_abstraction = 0.2 * S   # Ia ~ 6.92 mm
         
-        # Convert excess water to standing depth in cm
-        water_depth_cm = round((excess_water_mm / 10.0) * 4.2, 1)
+        if local_rain > initial_abstraction:
+            local_runoff = round(((local_rain - initial_abstraction) ** 2) / (local_rain + 0.8 * S) * (0.6 + runoff_coeff * 0.8), 1)
+        else:
+            local_runoff = round(local_rain * runoff_coeff * 0.5, 1)
+            
+        # Net Standing Waterlogging Depth calculation (cm)
+        # Effective drainage capacity adjusted by municipal efficiency
+        effective_drainage_mm = w["drain_cap"] * (drainage_eff if drainage_eff <= 1.0 else drainage_eff / 100.0)
+        
+        # Topographic depression ponding factor (low elevation wards accumulate standing water)
+        low_land_ponding = max(0.0, (550.0 - w["elev"]) * 0.4)
+        
+        excess_water_mm = max(0.0, local_runoff - effective_drainage_mm * 0.5) + low_land_ponding
+        
+        # Convert net excess water to standing inundation depth in cm
+        if local_rain > 2.0:
+            water_depth_cm = round(max(1.2, (excess_water_mm / 10.0) * 3.5), 1)
+        else:
+            water_depth_cm = round((local_runoff / 10.0) * 0.8, 1)
         
         # Assign Stoplight Hazard Level & Color Hex
-        if water_depth_cm > 45.0 or (local_rain > 40.0 and w["elev"] < 545.0):
+        if water_depth_cm > 35.0 or (local_rain > 35.0 and w["elev"] < 545.0):
             risk_level = "HIGH"
             color_hex = "#EF4444" # Red
-        elif water_depth_cm > 18.0 or local_rain > 20.0:
+        elif water_depth_cm > 12.0 or local_rain > 18.0:
             risk_level = "MODERATE"
             color_hex = "#F59E0B" # Amber / Orange
         else:

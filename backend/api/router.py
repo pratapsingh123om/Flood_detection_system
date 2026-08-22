@@ -194,8 +194,11 @@ def get_prediction(request: PredictionRequest):
                 {"label": "MAE", "val": f"{mae:.1f}mm", "sub": "Abs Error", "color": "#00d4ff"},
             ]
         
-        # Calculate dynamic physical risk areas based on runoff, elevation, drainage and forecast max rain
-        max_rain = max([d['rain'] for d in forecast_7_days], default=0.0)
+        # Calculate dynamic physical risk areas based on peak rainfall across active dataset
+        max_forecast_rain = max([d['rain'] for d in forecast_7_days], default=0.0)
+        max_test_rain = max([d['predicted'] for d in test_evaluation], default=0.0) if test_evaluation else 0.0
+        max_rain = max(max_forecast_rain, max_test_rain, 12.0)
+        
         base_risk_factor = (request.runoff * 0.4) + ((600 - min(request.elevation, 600)) * 0.08) + ((100 - request.drainage) * 0.3) + (max_rain * 0.5)
         
         risk_areas = [
@@ -209,7 +212,7 @@ def get_prediction(request: PredictionRequest):
         # Calculate localized 85 municipal ward flood risks
         ward_risks_list = calculate_ward_flood_risks(
             predicted_rainfall_mm=max_rain,
-            runoff_coeff=request.runoff,
+            runoff_coeff=request.runoff if request.runoff <= 1.0 else request.runoff / 100.0,
             drainage_eff=request.drainage / 100.0 if request.drainage > 1.0 else request.drainage
         )
         
