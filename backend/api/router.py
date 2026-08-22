@@ -41,11 +41,10 @@ def get_prediction(request: PredictionRequest):
     """
     try:
         import json
+        microservice_url = os.getenv("UNET_MICROSERVICE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
         
         # Handle U-Net + LSTM and U-Net + XGBoost Advanced Models
         if request.model in ["unet_lstm_bias", "unet_rf_bias"]:
-            # Provide a high-accuracy fallback simulation for the dashboard UI
-            # (In production, this would invoke the PyTorch/XGBoost models via the Microservice)
             forecast_7_days = predict_7_days(
                 model_name="upgraded_extreme_hybrid_pipeline",
                 location=request.location,
@@ -54,30 +53,12 @@ def get_prediction(request: PredictionRequest):
                 drainage=request.drainage
             )
             
-            # Apply dynamic precision shifts based on model type
-            for day in forecast_7_days:
-                if request.model == "unet_rf_bias":
-                    day['rain'] = round(day['rain'] * 1.02, 1) # XGBoost is extremely tight
-                else:
-                    day['rain'] = round(day['rain'] * 1.05, 1) # LSTM catches higher extremes
-            
             if request.timeframe in ["year", "month"]:
                 test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
             else:
                 test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
-                for d in test_evaluation:
-                    diff = d['actual'] - d['predicted']
-                    if request.model == "unet_rf_bias":
-                        # Simulate the 4.69 RMSE of XGBoost (highly squeezed errors)
-                        d['predicted'] = round(d['predicted'] + (diff * 0.55), 1)
-                    else:
-                        # Simulate LSTM
-                        d['predicted'] = round(d['predicted'] + (diff * 0.45), 1)
                         
         elif request.model == "unet_bias_model":
-            microservice_url = os.getenv("UNET_MICROSERVICE_URL", "http://localhost:8001")
-            
-            # Generate the baseline physical forecast
             forecast_7_days = predict_7_days(
                 model_name="upgraded_extreme_hybrid_pipeline",
                 location=request.location,
@@ -87,7 +68,7 @@ def get_prediction(request: PredictionRequest):
             )
             
             try:
-                # Ping the Bias microservice
+                # Ping the Bias Cloud microservice
                 response = requests.post(
                     f"{microservice_url}/predict_bias", 
                     json={"location": request.location},
@@ -96,17 +77,15 @@ def get_prediction(request: PredictionRequest):
                 
                 if response.status_code == 200:
                     bias_data = response.json().get("bias_correction", [])
-                    print("✅ U-Net Bias Microservice SUCCESS! Applying calibration.")
+                    print("✅ U-Net Bias Cloud Microservice SUCCESS! Applying calibration.")
                     
                     for i in range(min(len(forecast_7_days), len(bias_data))):
                         base_rain = forecast_7_days[i]['rain']
-                        # De-normalize bias (assumed percentage or normalized mm shift). Multiply by 10 to get a meaningful mm adjustment.
                         bias_val = bias_data[i]['predicted_bias'] * 10 
                         corrected = max(0.0, round(base_rain + bias_val, 1))
                         
                         forecast_7_days[i]['rain'] = corrected
                         
-                        # Adjust visual intensity based on calibrated rainfall
                         if corrected > 30:
                             forecast_7_days[i]['icon'] = '⛈'
                             forecast_7_days[i]['intensity'] = 0.9
@@ -123,18 +102,12 @@ def get_prediction(request: PredictionRequest):
                     raise Exception(f"Microservice returned {response.status_code}")
                     
             except Exception as e:
-                print(f"❌ U-Net Bias Microservice FAILED ({e}). Returning uncalibrated baseline.")
+                print(f"❌ U-Net Bias Microservice FAILED ({e}). Returning baseline forecast.")
                 
-            # Use baseline for the historical evaluation charts
             if request.timeframe in ["year", "month"]:
                 test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
             else:
                 test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
-                # Dynamically apply a visible calibration improvement for the U-Net Bias Model on historical data
-                for d in test_evaluation:
-                    diff = d['actual'] - d['predicted']
-                    # Squeeze the error by 40% to show substantial metric improvement for U-Net
-                    d['predicted'] = round(d['predicted'] + (diff * 0.40), 1)
                     
         else:
             # Fallback for any unknown models
@@ -145,16 +118,11 @@ def get_prediction(request: PredictionRequest):
                 elevation=request.elevation,
                 drainage=request.drainage
             )
-            
-        if request.timeframe in ["year", "month"]:
-            if request.model not in ["unet_lstm_bias", "unet_rf_bias", "unet_bias_model"]:
+            if request.timeframe in ["year", "month"]:
                 test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-        else:
-            # Test evaluation mode (past 42 days)
-            if request.model not in ["unet_lstm_bias", "unet_rf_bias", "unet_bias_model"]:
+            else:
                 test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
         
-        # Calculate dynamic metrics
         # Calculate dynamic metrics ONLY if we are in test evaluation mode
         if request.timeframe == "month":
             metrics = [
@@ -171,7 +139,7 @@ def get_prediction(request: PredictionRequest):
             import math
             tp = tn = fp = fn = 0
             se = sae = 0
-            threshold = 10.0 # Heavy rain threshold for classification metrics
+            threshold = 10.0 # Heavy rain threshold
             ext_threshold = 30.0 # Extreme flood threshold
             
             total = len(test_evaluation) or 1
@@ -225,17 +193,17 @@ def get_prediction(request: PredictionRequest):
                 {"label": "MAE", "val": f"{mae:.1f}mm", "sub": "Abs Error", "color": "#00d4ff"},
             ]
         
-        risk_areas = [
-            {"name": "Narmada Basin", "district": "Hoshangabad", "score": 94, "pop": "2.4M"},
-            {"name": "Shipra River Zone", "district": "Ujjain", "score": 87, "pop": "892K"},
-            {"name": "Khan River Corridor", "district": "Indore", "score": 81, "pop": "3.1M"},
-            {"name": "Betwa Catchment", "district": "Vidisha", "score": 76, "pop": "1.2M"},
-            {"name": "Chambal Valley", "district": "Morena", "score": 71, "pop": "654K"},
-        ]
+        # Calculate dynamic physical risk areas based on runoff, elevation, drainage and forecast max rain
+        max_rain = max([d['rain'] for d in forecast_7_days], default=0.0)
+        base_risk_factor = (request.runoff * 0.4) + ((600 - min(request.elevation, 600)) * 0.08) + ((100 - request.drainage) * 0.3) + (max_rain * 0.5)
         
-        for area in risk_areas:
-            if request.elevation < 500:
-                area["score"] = min(100, area["score"] + 5)
+        risk_areas = [
+            {"name": "Narmada Basin", "district": "Hoshangabad", "score": min(99, max(10, int(base_risk_factor * 1.05))), "pop": "2.4M"},
+            {"name": "Shipra River Zone", "district": "Ujjain", "score": min(99, max(10, int(base_risk_factor * 0.95))), "pop": "892K"},
+            {"name": "Khan River Corridor", "district": "Indore", "score": min(99, max(10, int(base_risk_factor * 0.90))), "pop": "3.1M"},
+            {"name": "Betwa Catchment", "district": "Vidisha", "score": min(99, max(10, int(base_risk_factor * 0.82))), "pop": "1.2M"},
+            {"name": "Chambal Valley", "district": "Morena", "score": min(99, max(10, int(base_risk_factor * 0.76))), "pop": "654K"},
+        ]
         
         return PredictionResponse(
             test_data=[TestDataPoint(**d) for d in test_evaluation],
@@ -246,3 +214,4 @@ def get_prediction(request: PredictionRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

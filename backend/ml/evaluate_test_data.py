@@ -5,7 +5,7 @@ import os
 import requests
 from ml.preprocess import preprocess_dataset
 
-INFERENCE_URL = os.getenv("INFERENCE_URL", "http://localhost:8000")
+INFERENCE_URL = os.getenv("INFERENCE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
 
 def fetch_historical_2026(lat=22.7196, lon=75.8577, start_date="2026-06-01", end_date="2026-08-19"):
     # To keep dashboard fast, we will only fetch the critical monsoon months (June-August 2026)

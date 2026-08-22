@@ -153,31 +153,52 @@ def predict_tabular(req: TabularInferenceRequest):
         df = pd.DataFrame(req.features)
         predictions = []
         
+        def align_features(estimator, row_df):
+            if hasattr(estimator, "feature_names_in_"):
+                expected_cols = list(estimator.feature_names_in_)
+                missing = [c for c in expected_cols if c not in row_df.columns]
+                for c in missing:
+                    row_df[c] = 0.0
+                return row_df[expected_cols]
+            return row_df
+
         for i in range(len(df)):
-            row = df.iloc[[i]]
+            row = df.iloc[[i]].copy()
             predicted_rain = 0.0
             
             if isinstance(model, dict):
                 clf = model.get("clf") or model.get("stage1_clf")
+                clf_row = align_features(clf, row.copy())
                 
                 if "stage3a_reg" in model and "stage2_extreme_clf" in model:
                     thresh = model.get("optimal_T_rain", 0.45)
-                    prob = clf.predict_proba(row)[0, 1]
+                    prob = clf.predict_proba(clf_row)[0, 1]
                     if prob < thresh:
                         predicted_rain = 0.0
                     else:
-                        ext_prob = model["stage2_extreme_clf"].predict_proba(row)[0, 1]
+                        ext_clf = model["stage2_extreme_clf"]
+                        ext_row = align_features(ext_clf, row.copy())
+                        ext_prob = ext_clf.predict_proba(ext_row)[0, 1]
                         if ext_prob > 0.35:
-                            predicted_rain = model["stage3b_extreme_reg"].predict(row)[0] * 1.10
+                            reg3b = model["stage3b_extreme_reg"]
+                            reg_row = align_features(reg3b, row.copy())
+                            predicted_rain = reg3b.predict(reg_row)[0] * 1.10
                         else:
-                            predicted_rain = model["stage3a_reg"].predict(row)[0]
+                            reg3a = model["stage3a_reg"]
+                            reg_row = align_features(reg3a, row.copy())
+                            predicted_rain = reg3a.predict(reg_row)[0]
                 else:
                     reg = model.get("reg") or model.get("stage2_asym_reg") or model.get("stage2_reg")
                     thresh = model.get("threshold", 0.45)
-                    prob = clf.predict_proba(row)[0, 1]
-                    predicted_rain = reg.predict(row)[0] if prob >= thresh else 0.0
+                    prob = clf.predict_proba(clf_row)[0, 1]
+                    if prob >= thresh:
+                        reg_row = align_features(reg, row.copy())
+                        predicted_rain = reg.predict(reg_row)[0]
+                    else:
+                        predicted_rain = 0.0
             else:
-                pred = model.predict(row)
+                model_row = align_features(model, row.copy())
+                pred = model.predict(model_row)
                 predicted_rain = float(pred[0]) if isinstance(pred, (list, np.ndarray)) else float(pred)
                 
             predictions.append(max(0.0, float(predicted_rain)))
@@ -185,3 +206,4 @@ def predict_tabular(req: TabularInferenceRequest):
         return {"predictions": predictions}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Tabular Inference error: {str(e)}")
+

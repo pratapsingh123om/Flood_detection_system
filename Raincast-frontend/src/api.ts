@@ -51,8 +51,10 @@ export interface ModelInfo {
   name: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://btp-flood-detection-system-775429752478.europe-west1.run.app/api";
+
 export async function fetchAvailableModels(): Promise<ModelInfo[]> {
-  const response = await fetch("https://btp-flood-detection-system-775429752478.europe-west1.run.app/api/models");
+  const response = await fetch(`${API_BASE_URL}/models`);
   if (!response.ok) {
     throw new Error(`API error: ${response.statusText}`);
   }
@@ -61,7 +63,7 @@ export async function fetchAvailableModels(): Promise<ModelInfo[]> {
 }
 
 export async function getPrediction(payload: PredictionPayload): Promise<PredictionResponse> {
-  const response = await fetch("https://btp-flood-detection-system-775429752478.europe-west1.run.app/api/predict", {
+  const response = await fetch(`${API_BASE_URL}/predict`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -75,3 +77,4 @@ export async function getPrediction(payload: PredictionPayload): Promise<Predict
 
   return response.json();
 }
+

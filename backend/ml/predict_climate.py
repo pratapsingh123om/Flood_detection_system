@@ -103,7 +103,7 @@ def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year
     mask_def = (df_default['date'] >= pd.to_datetime(viz_start)) & (df_default['date'] <= pd.to_datetime(viz_end))
     df_default = df_default[mask_def].reset_index(drop=True)
     
-    INFERENCE_URL = os.getenv("INFERENCE_URL", "http://localhost:8000")
+    INFERENCE_URL = os.getenv("INFERENCE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
     
     # We will send all features at once to the inference service to speed up
     feature_cols = [c for c in df_proc.columns if c not in ['date', 'rainfall_mm']]

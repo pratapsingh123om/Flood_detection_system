@@ -6,7 +6,7 @@ import requests
 from datetime import datetime, timedelta
 from ml.preprocess import get_latest_features
 
-INFERENCE_URL = os.getenv("INFERENCE_URL", "http://localhost:8000")
+INFERENCE_URL = os.getenv("INFERENCE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
 
 def predict_7_days(model_name: str, location: str, runoff: float, elevation: float, drainage: float) -> list:
     """
@@ -48,7 +48,7 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
                     predicted_rain = res.json().get("predictions", [0.0])[0]
                 else:
                     logging.error(f"Inference Service failed: {res.text}")
-                    predicted_rain = 0.0
+                    predicted_rain = max(0.0, (runoff * 0.15) + (i * 1.8) - (drainage * 0.05))
                     is_fallback = True
                         
                 predicted_rain = max(0.0, float(predicted_rain))
@@ -56,11 +56,12 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
                 
             except Exception as e:
                 logging.warning(f"Prediction failed on day {i}: {str(e)}")
-                predicted_rain = (runoff * 0.1) + (i * 2.5)
+                predicted_rain = max(0.0, (runoff * 0.15) + (i * 1.8) - (drainage * 0.05))
                 is_fallback = True
         else:
-            predicted_rain = (runoff * 0.1) + (i * 2.5)
+            predicted_rain = max(0.0, (runoff * 0.15) + (i * 1.8) - (drainage * 0.05))
             is_fallback = True
+
             
         # Determine icon based on rain
         icon = '🌤'
