@@ -16,20 +16,20 @@ api_router = APIRouter()
 @api_router.get("/models")
 def get_available_models():
     """
-    Returns the 3 advanced U-Net Hybrid Models available in the inference service.
+    Returns the Top 3 verified Best Prediction & CMIP Matching Models.
     """
     models = [
         {
-            "id": "unet_lstm_bias",
-            "name": "Hybrid U-Net + LSTM (PyTorch)"
+            "id": "xgboost_model",
+            "name": "1. XGBoost Regressor (Top CMIP Match · r=0.760 · RMSE: 7.22mm)"
         },
         {
-            "id": "unet_rf_bias",
-            "name": "Hybrid U-Net + XGBoost"
+            "id": "randomforest_model",
+            "name": "2. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)"
         },
         {
-            "id": "unet_bias_model",
-            "name": "U-Net AI Bias Calibrator (Keras)"
+            "id": "upgraded_extreme_hybrid_pipeline",
+            "name": "3. 3-Stage Extreme Hybrid (Spatial U-Net + Gated Regressors)"
         }
     ]
     return {"models": models}
@@ -42,88 +42,31 @@ def get_prediction(request: PredictionRequest):
     and evaluated test data across the IPCC Disaster Risk Framework.
     """
     try:
-        import json
-        microservice_url = os.getenv("UNET_MICROSERVICE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
-        
-        # Handle U-Net + LSTM and U-Net + XGBoost Advanced Models
-        if request.model in ["unet_lstm_bias", "unet_rf_bias"]:
-            forecast_7_days = predict_7_days(
-                model_name="upgraded_extreme_hybrid_pipeline",
+        chosen_model = request.model
+        if chosen_model in ["unet_lstm_bias", "unet_rf_bias", "unet_bias_model", "hybrid_pipeline", "extreme_hybrid"]:
+            chosen_model = "upgraded_extreme_hybrid_pipeline"
+        elif chosen_model in ["xgboost"]:
+            chosen_model = "xgboost_model"
+        elif chosen_model in ["randomforest"]:
+            chosen_model = "randomforest_model"
+
+        forecast_7_days = predict_7_days(
+            model_name=chosen_model,
+            location=request.location,
+            runoff=request.runoff,
+            elevation=request.elevation,
+            drainage=request.drainage
+        )
+
+        if request.timeframe in ["year", "month"]:
+            test_evaluation = predict_cmip6_climate(
+                model_name=chosen_model,
                 location=request.location,
-                runoff=request.runoff,
-                elevation=request.elevation,
-                drainage=request.drainage
+                timeframe=request.timeframe,
+                baseline_model=request.baseline_model
             )
-            
-            if request.timeframe in ["year", "month"]:
-                test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-            else:
-                test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
-                        
-        elif request.model == "unet_bias_model":
-            forecast_7_days = predict_7_days(
-                model_name="upgraded_extreme_hybrid_pipeline",
-                location=request.location,
-                runoff=request.runoff,
-                elevation=request.elevation,
-                drainage=request.drainage
-            )
-            
-            try:
-                # Ping the Bias Cloud microservice
-                response = requests.post(
-                    f"{microservice_url}/predict_bias", 
-                    json={"location": request.location},
-                    timeout=30
-                )
-                
-                if response.status_code == 200:
-                    bias_data = response.json().get("bias_correction", [])
-                    print("✅ U-Net Bias Cloud Microservice SUCCESS! Applying calibration.")
-                    
-                    for i in range(min(len(forecast_7_days), len(bias_data))):
-                        base_rain = forecast_7_days[i]['rain']
-                        bias_val = bias_data[i]['predicted_bias'] * 10 
-                        corrected = max(0.0, round(base_rain + bias_val, 1))
-                        
-                        forecast_7_days[i]['rain'] = corrected
-                        
-                        if corrected > 30:
-                            forecast_7_days[i]['icon'] = '⛈'
-                            forecast_7_days[i]['intensity'] = 0.9
-                        elif corrected > 10:
-                            forecast_7_days[i]['icon'] = '🌧'
-                            forecast_7_days[i]['intensity'] = 0.6
-                        elif corrected > 0:
-                            forecast_7_days[i]['icon'] = '🌦'
-                            forecast_7_days[i]['intensity'] = 0.3
-                        else:
-                            forecast_7_days[i]['icon'] = '🌤'
-                            forecast_7_days[i]['intensity'] = 0.1
-                else:
-                    raise Exception(f"Microservice returned {response.status_code}")
-                    
-            except Exception as e:
-                print(f"❌ U-Net Bias Microservice FAILED ({e}). Returning baseline forecast.")
-                
-            if request.timeframe in ["year", "month"]:
-                test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-            else:
-                test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
-                    
         else:
-            # Fallback for any unknown models
-            forecast_7_days = predict_7_days(
-                model_name="upgraded_extreme_hybrid_pipeline",
-                location=request.location,
-                runoff=request.runoff,
-                elevation=request.elevation,
-                drainage=request.drainage
-            )
-            if request.timeframe in ["year", "month"]:
-                test_evaluation = predict_cmip6_climate(model_name="upgraded_extreme_hybrid_pipeline", location=request.location, timeframe=request.timeframe, baseline_model=request.baseline_model)
-            else:
-                test_evaluation = evaluate_test_data(model_name="upgraded_extreme_hybrid_pipeline")
+            test_evaluation = evaluate_test_data(model_name=chosen_model)
         
         # Calculate dynamic metrics ONLY if we are in test evaluation mode
         if request.timeframe == "month":

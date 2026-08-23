@@ -63,6 +63,25 @@ def load_local_model(model_name: str):
             return None
     return None
 
+def align_features_to_model(model_obj, X: pd.DataFrame) -> pd.DataFrame:
+    expected_features = None
+    if hasattr(model_obj, 'feature_names_in_'):
+        expected_features = list(model_obj.feature_names_in_)
+    elif isinstance(model_obj, dict) and 'stage1_clf' in model_obj and hasattr(model_obj['stage1_clf'], 'feature_names_in_'):
+        expected_features = list(model_obj['stage1_clf'].feature_names_in_)
+    elif isinstance(model_obj, dict) and 'clf' in model_obj and hasattr(model_obj['clf'], 'feature_names_in_'):
+        expected_features = list(model_obj['clf'].feature_names_in_)
+    elif isinstance(model_obj, dict) and 'clf' in model_obj and hasattr(model_obj['clf'], 'feature_name_'):
+        expected_features = list(model_obj['clf'].feature_name_)
+        
+    if expected_features:
+        X_aligned = X.copy()
+        for col in expected_features:
+            if col not in X_aligned.columns:
+                X_aligned[col] = 0.0
+        return X_aligned[expected_features]
+    return X
+
 def run_local_inference(model_name: str, X: pd.DataFrame) -> np.ndarray:
     """
     Executes real machine learning model inference across the feature matrix X.
@@ -71,7 +90,10 @@ def run_local_inference(model_name: str, X: pd.DataFrame) -> np.ndarray:
     if model_obj is None:
         raise RuntimeError(f"ML Model '{model_name}' could not be loaded from models directory.")
     
-    # Handle dictionary hybrid pipeline
+    # Automatically align feature columns order and missing features
+    X = align_features_to_model(model_obj, X)
+    
+    # Handle dictionary hybrid pipeline (3-stage physics-gated)
     if isinstance(model_obj, dict) and 'stage1_clf' in model_obj:
         s1 = model_obj['stage1_clf']
         s2 = model_obj.get('stage2_extreme_clf')
@@ -113,6 +135,24 @@ def run_local_inference(model_name: str, X: pd.DataFrame) -> np.ndarray:
             elif s3b is not None:
                 preds[rain_mask] = s3b.predict(X_rain)
                 
+        return np.maximum(0.0, np.round(preds, 2))
+
+    # Handle 2-stage classifier + regressor dictionary (e.g. tuned_asym_hybrid)
+    if isinstance(model_obj, dict) and 'clf' in model_obj and 'reg' in model_obj:
+        clf = model_obj['clf']
+        reg = model_obj['reg']
+        
+        if hasattr(clf, 'predict_proba'):
+            prob = clf.predict_proba(X)[:, 1]
+            rain_mask = prob >= 0.35
+        else:
+            rain_mask = clf.predict(X) == 1
+            
+        preds = np.zeros(len(X), dtype=float)
+        if np.any(rain_mask):
+            raw_reg_preds = reg.predict(X[rain_mask])
+            preds[rain_mask] = raw_reg_preds
+            
         return np.maximum(0.0, np.round(preds, 2))
         
     # Handle single estimator (XGBoost / RandomForest)

@@ -165,10 +165,9 @@ export async function fetchAvailableModels(): Promise<ModelInfo[]> {
   }
 
   return [
-    { id: "upgraded_extreme_hybrid_pipeline", name: "Hybrid U-Net + LSTM (PyTorch)" },
-    { id: "xgboost_model", name: "Hybrid U-Net + XGBoost" },
-    { id: "randomforest_model", name: "Random Forest Regressor" },
-    { id: "tuned_asym_hybrid", name: "Asymmetric Heavy Rain Pipeline" }
+    { id: "xgboost_model", name: "1. XGBoost Regressor (Top CMIP Match · r=0.760 · RMSE: 7.22mm)" },
+    { id: "randomforest_model", name: "2. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)" },
+    { id: "upgraded_extreme_hybrid_pipeline", name: "3. 3-Stage Extreme Hybrid (Spatial U-Net + Gated Regressors)" }
   ];
 }
 

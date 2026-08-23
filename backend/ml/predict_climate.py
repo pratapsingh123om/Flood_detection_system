@@ -12,13 +12,25 @@ def fetch_cmip6_data(lat: float, lon: float, start_date: str, end_date: str, bas
     Fetches SSP5-8.5 climate projection data from OpenMeteo Climate API.
     Uses MPI_ESM1_2_XR which provides daily temperature, precipitation, wind speed.
     """
+    # Map friendly names or legacy IDs to valid OpenMeteo CMIP6 HighResMIP models
+    cmip_map = {
+        "MPI_ESM1_2_XR": "MPI_ESM1_2_XR",
+        "MRI_ESM2_0": "MRI_AGCM3_2_S",
+        "MRI_AGCM3_2_S": "MRI_AGCM3_2_S",
+        "EC_Earth3_Veg": "EC_Earth3P_HR",
+        "EC_Earth3P_HR": "EC_Earth3P_HR",
+        "CMCC_CM2_VHR4": "CMCC_CM2_VHR4",
+        "FGOALS_f3_H": "FGOALS_f3_H"
+    }
+    valid_model = cmip_map.get(baseline_model, "MPI_ESM1_2_XR")
+    
     url = 'https://climate-api.open-meteo.com/v1/climate'
     params = {
         'latitude': lat,
         'longitude': lon,
         'start_date': start_date,
         'end_date': end_date,
-        'models': baseline_model, # High resolution SSP5-8.5 model
+        'models': valid_model, # High resolution SSP5-8.5 model
         'daily': 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max'
     }
     
