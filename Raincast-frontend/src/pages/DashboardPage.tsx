@@ -6,7 +6,7 @@ import {
 import { getPrediction, fetchAvailableModels, ModelInfo, WardFloodRisk, DEFAULT_MODELS } from '../api'
 import { WardMapContainer } from '../components/WardMapContainer'
 import { PersonaToggle } from '../components/PersonaToggle'
-import { getIndoreDefaultWards } from '../data/indoreWards'
+import { getIndoreDefaultWards } from '../data/indoreWardsData'
 
 export default function DashboardPage() {
   const [activePhase, setActivePhase] = useState<'PHASE_1' | 'PHASE_2' | 'PHASE_3'>('PHASE_1')
