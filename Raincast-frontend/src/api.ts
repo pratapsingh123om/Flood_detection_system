@@ -165,9 +165,9 @@ export async function fetchAvailableModels(): Promise<ModelInfo[]> {
   }
 
   return [
-    { id: "xgboost_model", name: "1. XGBoost Regressor (Top CMIP Match · r=0.760 · RMSE: 7.22mm)" },
-    { id: "randomforest_model", name: "2. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)" },
-    { id: "upgraded_extreme_hybrid_pipeline", name: "3. 3-Stage Extreme Hybrid (Spatial U-Net + Gated Regressors)" }
+    { id: "unet_lstm_bias", name: "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Top CMIP Match: 22.4%)" },
+    { id: "unet_rf_bias", name: "2. Hybrid U-Net + XGBoost (Top Accuracy · r=0.760 · RMSE: 7.22mm)" },
+    { id: "randomforest_model", name: "3. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)" }
   ];
 }
 

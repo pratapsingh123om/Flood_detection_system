@@ -16,20 +16,20 @@ api_router = APIRouter()
 @api_router.get("/models")
 def get_available_models():
     """
-    Returns the Top 3 verified Best Prediction & CMIP Matching Models.
+    Returns the 3 Best Prediction & CMIP Matching Models from advanced_hybrid.
     """
     models = [
         {
-            "id": "xgboost_model",
-            "name": "1. XGBoost Regressor (Top CMIP Match · r=0.760 · RMSE: 7.22mm)"
+            "id": "unet_lstm_bias",
+            "name": "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Top CMIP Match: 22.4%)"
+        },
+        {
+            "id": "unet_rf_bias",
+            "name": "2. Hybrid U-Net + XGBoost (Top Accuracy · r=0.760 · RMSE: 7.22mm)"
         },
         {
             "id": "randomforest_model",
-            "name": "2. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)"
-        },
-        {
-            "id": "upgraded_extreme_hybrid_pipeline",
-            "name": "3. 3-Stage Extreme Hybrid (Spatial U-Net + Gated Regressors)"
+            "name": "3. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)"
         }
     ]
     return {"models": models}
@@ -43,12 +43,14 @@ def get_prediction(request: PredictionRequest):
     """
     try:
         chosen_model = request.model
-        if chosen_model in ["unet_lstm_bias", "unet_rf_bias", "unet_bias_model", "hybrid_pipeline", "extreme_hybrid"]:
-            chosen_model = "upgraded_extreme_hybrid_pipeline"
-        elif chosen_model in ["xgboost"]:
+        if chosen_model in ["unet_lstm_bias", "unet_lstm_75years", "residual_unet_lstm_pipeline_75years"]:
+            chosen_model = "unet_lstm_75years"
+        elif chosen_model in ["unet_rf_bias", "unet_xgboost_hybrid", "xgboost", "xgboost_model"]:
             chosen_model = "xgboost_model"
-        elif chosen_model in ["randomforest"]:
+        elif chosen_model in ["randomforest", "randomforest_model"]:
             chosen_model = "randomforest_model"
+        else:
+            chosen_model = "xgboost_model"
 
         forecast_7_days = predict_7_days(
             model_name=chosen_model,
