@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import LandingPage from './pages/LandingPage'
 import DashboardPage from './pages/DashboardPage'
 import ProgressPage from './pages/ProgressPage'
+import AboutPage from './pages/AboutPage'
 
 export default function App() {
   const location = useLocation()
@@ -24,7 +25,7 @@ export default function App() {
           left: 0,
           right: 0,
           zIndex: 100,
-          background: scrolled ? 'rgba(4, 8, 15, 0.95)' : 'rgba(4, 8, 15, 0.7)',
+          background: scrolled ? 'rgba(4, 8, 15, 0.95)' : 'rgba(4, 8, 15, 0.75)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(0, 212, 255, 0.12)',
@@ -48,36 +49,54 @@ export default function App() {
           {/* Links */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <NavLink
-              to="/progress"
-              style={({ isActive }) => ({
-                textDecoration: 'none',
-                padding: '6px 16px',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 500,
-                color: isActive ? '#00d4ff' : '#6b8ab0',
-                background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
-                transition: 'all 0.2s',
-              })}
-            >
-              Progress Log
-            </NavLink>
-            <NavLink
               to="/"
               end
               style={({ isActive }) => ({
                 textDecoration: 'none',
-                padding: '6px 16px',
+                padding: '6px 14px',
                 borderRadius: 6,
                 fontSize: 13,
                 fontWeight: 500,
-                color: isActive ? '#00d4ff' : '#6b8ab0',
+                color: isActive ? '#00d4ff' : '#94a3b8',
                 background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
                 transition: 'all 0.2s',
               })}
             >
-              About
+              Overview
             </NavLink>
+
+            <NavLink
+              to="/progress"
+              style={({ isActive }) => ({
+                textDecoration: 'none',
+                padding: '6px 14px',
+                borderRadius: 6,
+                fontSize: 13,
+                fontWeight: 500,
+                color: isActive ? '#00d4ff' : '#94a3b8',
+                background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
+                transition: 'all 0.2s',
+              })}
+            >
+              Progress Flow
+            </NavLink>
+
+            <NavLink
+              to="/about"
+              style={({ isActive }) => ({
+                textDecoration: 'none',
+                padding: '6px 14px',
+                borderRadius: 6,
+                fontSize: 13,
+                fontWeight: 500,
+                color: isActive ? '#00d4ff' : '#94a3b8',
+                background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
+                transition: 'all 0.2s',
+              })}
+            >
+              About Us
+            </NavLink>
+
             <NavLink
               to="/dashboard"
               style={({ isActive }) => ({
@@ -86,13 +105,14 @@ export default function App() {
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 600,
-                color: isActive ? '#04080f' : '#04080f',
+                color: '#04080f',
                 background: 'linear-gradient(135deg, #00d4ff, #06ffa5)',
                 boxShadow: '0 0 20px rgba(0,212,255,0.3)',
                 transition: 'all 0.2s',
+                marginLeft: 6
               })}
             >
-              Go to Dashboard
+              Launch Dashboard 🚀
             </NavLink>
           </div>
         </div>
@@ -102,10 +122,12 @@ export default function App() {
       <div style={{ paddingTop: 60 }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </div>
     </div>
   )
 }
+

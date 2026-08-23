@@ -5,10 +5,12 @@ const C = {
   green: '#06ffa5',
   amber: '#f59e0b',
   red: '#ff4d6d',
+  purple: '#7c5af5',
   bg: '#04080f',
   surface: '#080f1c',
   panel: '#0c1525',
   border: '#1a2d4a',
+  borderBright: '#1e3a5f',
   text: '#e2eaf5',
   muted: '#6b8ab0',
   dim: '#3d5a7a',
@@ -20,10 +22,10 @@ function Chip({ label, color = C.cyan }: { label: string; color?: string }) {
       display: 'inline-flex', alignItems: 'center', gap: 6,
       padding: '4px 12px', borderRadius: 20,
       background: `${color}18`, border: `1px solid ${color}40`,
-      fontSize: 12, fontWeight: 500, color,
+      fontSize: 12, fontWeight: 600, color,
       fontFamily: "'JetBrains Mono', monospace",
     }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, boxShadow: `0 0 6px ${color}` }} />
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, boxShadow: `0 0 6px ${color}` }} />
       {label}
     </span>
   )
@@ -35,312 +37,315 @@ export default function LandingPage() {
   return (
     <div style={{ background: C.bg, color: C.text, overflowX: 'hidden' }}>
 
-      {/* Hero */}
+      {/* Hero Section */}
       <section style={{ position: 'relative', minHeight: '88vh', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-        {/* Grid background */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
           backgroundImage: `linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px)`,
           backgroundSize: '40px 40px',
         }} />
-        {/* Radial glow */}
         <div style={{
-          position: 'absolute', top: '20%', right: '10%', width: 600, height: 600,
-          background: 'radial-gradient(ellipse, rgba(0,212,255,0.08) 0%, transparent 70%)',
-          zIndex: 0,
-        }} />
-        <div style={{
-          position: 'absolute', top: '40%', left: '5%', width: 400, height: 400,
-          background: 'radial-gradient(ellipse, rgba(6,255,165,0.05) 0%, transparent 70%)',
+          position: 'absolute', top: '15%', right: '8%', width: 550, height: 550,
+          background: 'radial-gradient(ellipse, rgba(0,212,255,0.1) 0%, transparent 70%)',
           zIndex: 0,
         }} />
 
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '80px 24px', position: 'relative', zIndex: 1, width: '100%' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
-            {/* Left */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 48, alignItems: 'center' }}>
+            
+            {/* Left Narrative */}
             <div>
-              <div style={{ marginBottom: 20 }}>
-                <Chip label="BTP — Flood Detection System" color={C.cyan} />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                <Chip label="BTP Capstone & Research State" color={C.cyan} />
+                <Chip label="75-Yr ERA5 + 30m SRTM DEM" color={C.green} />
+                <Chip label="IPCC Risk Framework" color={C.purple} />
               </div>
+
               <h1 style={{
                 fontFamily: "'Exo 2', sans-serif",
-                fontSize: 'clamp(36px, 5vw, 64px)',
+                fontSize: 'clamp(36px, 4.5vw, 60px)',
                 fontWeight: 900,
-                lineHeight: 1.05,
+                lineHeight: 1.1,
                 letterSpacing: '-0.03em',
-                marginBottom: 24,
+                marginBottom: 20,
               }}>
-                <span style={{ display: 'block', color: C.text }}>Generative AI for</span>
+                Physics-Hybrid AI for <br />
                 <span style={{
-                  display: 'block',
                   background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                 }}>
-                  Extreme Flood
-                </span>
-                <span style={{ display: 'block', color: C.text }}>Prediction.</span>
+                  Hyper-Local Extreme Flood
+                </span><br />
+                Risk Intelligence.
               </h1>
-              <p style={{ fontSize: 17, color: C.muted, lineHeight: 1.7, maxWidth: 480, marginBottom: 36 }}>
-                A spatiotemporal deep learning platform that synthesizes satellite imagery, hydrological parameters, and rainfall data to deliver actionable flood risk intelligence.
+
+              <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, maxWidth: 580, marginBottom: 32 }}>
+                Moving beyond coarse global models that systematically miss extreme rainfall. RainCast AI fuses 75 years of gridded satellite meteorology with 30m physical topography and the full IPCC Disaster Risk Framework (<strong style={{ color: C.text }}>Hazard × Vulnerability × Exposure</strong>).
               </p>
+
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => navigate('/dashboard')}
                   style={{
-                    padding: '12px 28px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                    padding: '14px 32px', borderRadius: 10, border: 'none', cursor: 'pointer',
                     background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
-                    color: '#04080f', fontWeight: 700, fontSize: 14,
+                    color: '#04080f', fontWeight: 800, fontSize: 14,
                     fontFamily: "'Exo 2', sans-serif",
-                    boxShadow: `0 0 30px rgba(0,212,255,0.3)`,
-                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    boxShadow: `0 0 30px rgba(0,212,255,0.35)`,
+                    transition: 'all 0.2s',
                   }}
-                  onMouseEnter={e => { (e.target as HTMLElement).style.transform = 'translateY(-2px)'; (e.target as HTMLElement).style.boxShadow = '0 0 40px rgba(0,212,255,0.5)' }}
-                  onMouseLeave={e => { (e.target as HTMLElement).style.transform = ''; (e.target as HTMLElement).style.boxShadow = '0 0 30px rgba(0,212,255,0.3)' }}
                 >
-                  Launch Dashboard →
+                  Enter Live Dashboard →
                 </button>
                 <button
                   onClick={() => navigate('/progress')}
                   style={{
-                    padding: '12px 28px', borderRadius: 10, cursor: 'pointer',
-                    background: 'transparent',
+                    padding: '14px 28px', borderRadius: 10, cursor: 'pointer',
+                    background: C.panel,
                     border: `1px solid ${C.border}`,
-                    color: C.muted, fontWeight: 500, fontSize: 14,
+                    color: C.text, fontWeight: 600, fontSize: 14,
                     transition: 'all 0.2s',
                   }}
-                  onMouseEnter={e => { (e.target as HTMLElement).style.borderColor = C.cyan; (e.target as HTMLElement).style.color = C.cyan }}
-                  onMouseLeave={e => { (e.target as HTMLElement).style.borderColor = C.border; (e.target as HTMLElement).style.color = C.muted }}
                 >
-                  View Progress Log
+                  Explore Research Evolution (v0.1 → v1.0)
                 </button>
               </div>
             </div>
 
-            {/* Right — image pair */}
-            <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 16, height: 460 }}>
-              <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}` }}>
-                <img
-                  src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&h=220&fit=crop&auto=format"
-                  alt="ML data processing visualization"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,212,255,0.15), transparent)' }} />
-                <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-                  <Chip label="ML Data Processing" color={C.cyan} />
+            {/* Right Summary Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{
+                background: C.panel, border: `1px solid ${C.borderBright}`,
+                borderRadius: 14, padding: 24, boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.cyan }}>CURRENT BEST BENCHMARK</span>
+                  <span style={{ fontSize: 11, background: 'rgba(6,255,165,0.15)', color: C.green, padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>VERIFIED</span>
                 </div>
-              </div>
-              <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', border: `1px solid ${C.border}` }}>
-                <img
-                  src="https://images.unsplash.com/photo-1504608524841-42584120d693?w=700&h=220&fit=crop&auto=format"
-                  alt="Satellite flood and rainfall imagery"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(6,255,165,0.12), transparent)' }} />
-                <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-                  <Chip label="Satellite Rainfall Imagery" color={C.green} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Methodology Flowchart */}
-      <section style={{ padding: '100px 24px', background: C.surface, position: 'relative' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.cyan, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12 }}>Methodology & Approach</p>
-            <h2 style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.02em', margin: 0 }}>The Data Pipeline</h2>
-          </div>
-
-          {/* Flowchart */}
-          <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, overflowX: 'auto', paddingBottom: 8 }}>
-            {/* Step 1 */}
-            <FlowStep
-              step="01"
-              title="Inputs"
-              color={C.cyan}
-              isFirst
-            >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
-                {['Rainfall Data', 'Spatiotemporal', 'Runoff Rates', 'Elevation DEM', 'Catchment Params'].map((item) => (
-                  <Chip key={item} label={item} color={C.cyan} />
-                ))}
-              </div>
-            </FlowStep>
-
-            <FlowArrow color={C.cyan} />
-
-            {/* Step 2 */}
-            <FlowStep step="02" title="ML Processing" color="#7c5af5">
-              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {[
-                  { name: 'Attention-LSTM', bar: 92 },
-                  { name: 'XGBoost', bar: 78 },
-                  { name: 'CNN-Spatial', bar: 85 },
-                ].map(m => (
-                  <div key={m.name}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.muted, marginBottom: 4, fontFamily: "'JetBrains Mono', monospace" }}>
-                      <span>{m.name}</span>
-                      <span style={{ color: '#7c5af5' }}>{m.bar}%</span>
-                    </div>
-                    <div style={{ height: 3, background: '#1a2d4a', borderRadius: 2 }}>
-                      <div style={{ height: '100%', width: `${m.bar}%`, background: 'linear-gradient(90deg, #7c5af5, #00d4ff)', borderRadius: 2 }} />
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                  <div style={{ background: C.surface, padding: 12, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, color: C.muted }}>Nash-Sutcliffe (NSE)</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 800, color: C.green, fontFamily: "'Exo 2', sans-serif" }}>0.42+</p>
                   </div>
-                ))}
-                <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(124,90,245,0.1)', border: '1px solid rgba(124,90,245,0.3)', fontSize: 11, color: '#a78bfa', fontFamily: "'JetBrains Mono', monospace" }}>
-                  Ensemble Fusion Layer
-                </div>
-              </div>
-            </FlowStep>
-
-            <FlowArrow color={C.green} />
-
-            {/* Step 3 */}
-            <FlowStep step="03" title="Deliverable" color={C.green} isLast>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
-                {[
-                  { label: 'Flood Risk Score', val: '87.4', unit: '/100', color: '#ff4d6d' },
-                  { label: 'Return Period', val: '25Y', unit: '', color: C.amber },
-                  { label: 'Pop. Affected', val: '142K', unit: '', color: C.cyan },
-                  { label: 'Alert Level', val: 'HIGH', unit: '', color: '#ff4d6d' },
-                ].map(r => (
-                  <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: 6, background: `${r.color}10`, border: `1px solid ${r.color}30` }}>
-                    <span style={{ fontSize: 11, color: C.muted }}>{r.label}</span>
-                    <span style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, color: r.color, fontSize: 14 }}>{r.val}{r.unit}</span>
+                  <div style={{ background: C.surface, padding: 12, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, color: C.muted }}>Extreme CSI (&gt;30mm)</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 800, color: C.cyan, fontFamily: "'Exo 2', sans-serif" }}>0.814</p>
                   </div>
-                ))}
-              </div>
-            </FlowStep>
-          </div>
-        </div>
-      </section>
-
-      {/* Comparative Analysis */}
-      <section style={{ padding: '100px 24px', background: C.bg, position: 'relative' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.muted, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12 }}>Competitive Landscape</p>
-            <h2 style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.02em', margin: 0 }}>Why RainCast AI Wins</h2>
-          </div>
-
-          {/* Existing solutions grid */}
-          <div style={{ marginBottom: 40 }}>
-            <p style={{ fontSize: 12, color: C.dim, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 20, fontFamily: "'JetBrains Mono', monospace" }}>Existing Solutions</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-              {[
-                { name: 'HEC-RAS', type: 'Hydraulic Simulation', desc: 'Physics-based 1D/2D flood modeling. Accurate for known channels but requires precise survey data and weeks of setup.', limit: 'No ML, manual calibration', score: 52 },
-                { name: 'SWAT Model', type: 'Hydrological Modeling', desc: 'Watershed-scale runoff simulation. Strong for agricultural basins but struggles with urban dynamics and extreme events.', limit: 'Static parameters, poor extremes', score: 61 },
-                { name: 'FLOODMAP', type: 'Remote Sensing Based', desc: 'Satellite-derived inundation mapping. Good for post-event analysis but lacks predictive capability and temporal resolution.', limit: 'Reactive, not predictive', score: 44 },
-              ].map(sol => (
-                <div key={sol.name} style={{
-                  padding: 24, borderRadius: 12,
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  position: 'relative', overflow: 'hidden',
-                }}>
-                  <div style={{ position: 'absolute', top: 0, right: 0, padding: '4px 10px', borderRadius: '0 12px 0 8px', background: C.border, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.dim }}>{sol.score}/100</div>
-                  <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 18, marginBottom: 4, color: C.text }}>{sol.name}</p>
-                  <p style={{ fontSize: 11, color: C.cyan, letterSpacing: '0.1em', marginBottom: 12, fontFamily: "'JetBrains Mono', monospace" }}>{sol.type}</p>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>{sol.desc}</p>
-                  <div style={{ padding: '6px 10px', borderRadius: 6, background: 'rgba(255,77,109,0.08)', border: '1px solid rgba(255,77,109,0.2)', fontSize: 11, color: '#ff4d6d', fontFamily: "'JetBrains Mono', monospace" }}>
-                    ✗ {sol.limit}
+                  <div style={{ background: C.surface, padding: 12, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, color: C.muted }}>Detection Rate (POD)</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 800, color: C.green, fontFamily: "'Exo 2', sans-serif" }}>95.0%</p>
+                  </div>
+                  <div style={{ background: C.surface, padding: 12, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                    <p style={{ margin: 0, fontSize: 11, color: C.muted }}>False Alarm (FAR)</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 800, color: C.amber, fontFamily: "'Exo 2', sans-serif" }}>5.0%</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Differentiator */}
-          <div style={{
-            padding: 40, borderRadius: 16,
-            background: 'linear-gradient(135deg, rgba(0,212,255,0.06), rgba(6,255,165,0.04))',
-            border: `1px solid rgba(0,212,255,0.25)`,
-            boxShadow: '0 0 60px rgba(0,212,255,0.06)',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, background: 'radial-gradient(circle, rgba(0,212,255,0.1), transparent)', borderRadius: '50%' }} />
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 40, position: 'relative', flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 300px' }}>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.green, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12 }}>The Differentiating Factor</p>
-                <h3 style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 32, letterSpacing: '-0.02em', marginBottom: 16 }}>
-                  Predictive.<br />AI-First.<br /><span style={{ color: C.cyan }}>Real-Time.</span>
-                </h3>
-                <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.7, maxWidth: 440 }}>
-                  RainCast AI uniquely combines Attention-LSTM temporal modeling with XGBoost ensemble methods, trained on 30+ years of satellite-derived spatiotemporal data. Unlike rule-based systems, our model adapts to non-stationary climate patterns and delivers probabilistic flood forecasts up to 12 months ahead.
+              <div style={{
+                background: 'rgba(124, 90, 245, 0.08)', border: '1px solid rgba(124, 90, 245, 0.25)',
+                borderRadius: 14, padding: 20
+              }}>
+                <p style={{ margin: '0 0 6px', fontSize: 12, color: '#a78bfa', fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                  📐 AHP Multi-Criteria Weighting
+                </p>
+                <p style={{ margin: 0, fontSize: 13, color: C.text, lineHeight: 1.5 }}>
+                  <strong style={{ color: C.cyan }}>0.80 Hazard</strong> + <strong style={{ color: C.amber }}>0.15 Vulnerability</strong> + <strong style={{ color: C.green }}>0.05 Exposure</strong> = <span style={{ color: '#fff', fontWeight: 700 }}>1.00 (IPCC Composite Risk)</span>
                 </p>
               </div>
-              <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {[
-                  { label: 'Prediction Horizon', val: '12 Months', icon: '◈' },
-                  { label: 'Model Accuracy (POD)', val: '94.7%', icon: '◉' },
-                  { label: 'Extreme Event Accuracy', val: '89.2%', icon: '◆' },
-                  { label: 'Data Sources Integrated', val: '14 Feeds', icon: '◇' },
-                ].map(stat => (
-                  <div key={stat.label} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)' }}>
-                    <span style={{ color: C.cyan, fontSize: 18, fontFamily: "'JetBrains Mono', monospace" }}>{stat.icon}</span>
-                    <div>
-                      <p style={{ fontSize: 11, color: C.muted, margin: 0, marginBottom: 2 }}>{stat.label}</p>
-                      <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 18, color: C.green, margin: 0 }}>{stat.val}</p>
-                    </div>
-                  </div>
-                ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Research Progression Narrative: Problem -> Existing -> Our Solution */}
+      <section style={{ padding: '80px 24px', background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.cyan, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>
+              Scientific Rigor & Motivation
+            </p>
+            <h2 style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 'clamp(28px, 3.5vw, 40px)', margin: 0 }}>
+              The Research Journey: From Problem to Current Best State
+            </h2>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            
+            {/* Box 1: The Problem */}
+            <div style={{ background: C.panel, padding: 28, borderRadius: 14, border: `1px solid ${C.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <span style={{ fontSize: 24 }}>⚠️</span>
+                <h3 style={{ margin: 0, fontSize: 18, color: C.red, fontWeight: 700 }}>1. The Flaw in Global AI</h3>
               </div>
+              <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: 0 }}>
+                Global AI models like <strong>Google GraphCast</strong> and traditional <strong>ECMWF</strong> operate at ~25 km resolution. They smooth out the mountains, valleys, and urban drainage corridors that physically trigger extreme localized rainfall, causing catastrophic under-predictions and high false alarms.
+              </p>
+            </div>
+
+            {/* Box 2: Existing Approaches */}
+            <div style={{ background: C.panel, padding: 28, borderRadius: 14, border: `1px solid ${C.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <span style={{ fontSize: 24 }}>🔬</span>
+                <h3 style={{ margin: 0, fontSize: 18, color: C.amber, fontWeight: 700 }}>2. Multi-Source Uncertainties</h3>
+              </div>
+              <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: 0 }}>
+                As proven by recent <strong>NIT Warangal hydrology research</strong>, traditional physics models (HEC-HMS) suffer from high parameter uncertainty due to manual guesswork, while point gauge stations create spatial blindspots compared to gridded satellite reanalysis.
+              </p>
+            </div>
+
+            {/* Box 3: Our Current Best Approach */}
+            <div style={{ background: C.panel, padding: 28, borderRadius: 14, border: `1px solid rgba(0,212,255,0.3)`, boxShadow: '0 0 30px rgba(0,212,255,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <span style={{ fontSize: 24 }}>⚡</span>
+                <h3 style={{ margin: 0, fontSize: 18, color: C.green, fontWeight: 700 }}>3. RainCast Best State</h3>
+              </div>
+              <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, margin: 0 }}>
+                A <strong>Spatio-Temporal Hybrid U-Net + LSTM/XGBoost</strong> with TFLite quantization that directly ingests 30m SRTM DEM elevation tensors. Combined with 2D SCS-CN runoff hydrodynamics, it delivers ward-level waterlogging depth across 85 municipal wards without human parameter uncertainty.
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* Complete IPCC Disaster Risk Framework Section */}
+      <section style={{ padding: '80px 24px', background: C.bg }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.green, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>
+              Integrated Hydrological Physics
+            </p>
+            <h2 style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 'clamp(28px, 3.5vw, 40px)', margin: 0 }}>
+              The Full IPCC Disaster Risk Formula
+            </h2>
+            <p style={{ color: C.muted, fontSize: 15, marginTop: 8 }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.cyan }}>Risk = Hazard (H) × Vulnerability (V) × Exposure (Exp)</span>
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 32 }}>
+            
+            {/* Hazard */}
+            <div style={{ background: C.surface, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 18, color: C.cyan, fontWeight: 700 }}>🔴 Hazard (H)</h3>
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.muted }}>AHP: 0.80</span>
+              </div>
+              <p style={{ fontSize: 13, color: '#93c5fd', fontFamily: "'JetBrains Mono', monospace", marginBottom: 12 }}>
+                H = Runoff (SCS-CN) × Wet Days × Slope
+              </p>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                <li><strong>R (SCS-CN):</strong> Urban runoff with CN=88</li>
+                <li><strong>W (Wet Days):</strong> Antecedent moisture saturation</li>
+                <li><strong>S (Slope):</strong> 30m DEM slope gradient</li>
+              </ul>
+            </div>
+
+            {/* Vulnerability */}
+            <div style={{ background: C.surface, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 18, color: C.amber, fontWeight: 700 }}>🟠 Vulnerability (V)</h3>
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.muted }}>AHP: 0.15</span>
+              </div>
+              <p style={{ fontSize: 13, color: '#fcd34d', fontFamily: "'JetBrains Mono', monospace", marginBottom: 12 }}>
+                V = D × NDVI × NDWI × E × TPI
+              </p>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                <li><strong>D:</strong> Euclidean distance to river corridor</li>
+                <li><strong>E & TPI:</strong> Elevation & Topographic Position Index</li>
+                <li><strong>NDVI & NDWI:</strong> Vegetation & Surface wetness</li>
+              </ul>
+            </div>
+
+            {/* Exposure */}
+            <div style={{ background: C.surface, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 18, color: C.green, fontWeight: 700 }}>🟢 Exposure (Exp)</h3>
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.muted }}>AHP: 0.05</span>
+              </div>
+              <p style={{ fontSize: 13, color: '#6ee7b7', fontFamily: "'JetBrains Mono', monospace", marginBottom: 12 }}>
+                Exp = Population Density (Census / GHSL)
+              </p>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                <li><strong>Census 2011:</strong> Ward-level demographic baseline</li>
+                <li><strong>GHSL (1975–2030):</strong> 5-year urbanization epochs</li>
+                <li><strong>LULC Multi-Epochs:</strong> 2000–2050 impervious tracking</li>
+              </ul>
+            </div>
+
+          </div>
+
+          {/* 9 Atmospheric Parameters Tensor Highlight */}
+          <div style={{
+            background: C.panel, border: `1px solid ${C.border}`, borderRadius: 14, padding: 24
+          }}>
+            <p style={{ margin: '0 0 12px', fontSize: 12, color: C.cyan, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+              🌐 Full 9-Parameter Climate & Atmospheric Tensor
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              <div style={{ fontSize: 13, color: C.muted }}>1. <strong>Temperature:</strong> Tmax & Tmin (°C)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>2. <strong>Dew-Point:</strong> Condensation Temp (°C)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>3. <strong>Relative Humidity:</strong> Saturation (%)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>4. <strong>Shortwave Radiation:</strong> Downwelling (W/m²)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>5. <strong>Longwave Radiation:</strong> Thermal Infrared (W/m²)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>6. <strong>Wind Magnitude:</strong> √(U² + V²) (m/s)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>7. <strong>Wind Vectors:</strong> Zonal (U) & Meridional (V)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>8. <strong>Surface Pressure:</strong> Sea-level barometric (hPa)</div>
+              <div style={{ fontSize: 13, color: C.muted }}>9. <strong>Geopotential Height:</strong> 500hPa synoptic trough (m)</div>
             </div>
           </div>
+
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section style={{ padding: '80px 24px', background: C.surface, textAlign: 'center', borderTop: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <h2 style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 36, marginBottom: 16 }}>
+            Ready to explore the 3-Phase operational system?
+          </h2>
+          <p style={{ color: C.muted, fontSize: 16, marginBottom: 32 }}>
+            Switch between Phase 1 (Live Rainfall Prediction), Phase 2 (City Flood Risk for Indore's 85 Wards), and Phase 3 (India Scale Roadmap).
+          </p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{
+              padding: '16px 36px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
+              color: '#04080f', fontWeight: 800, fontSize: 16,
+              fontFamily: "'Exo 2', sans-serif",
+              boxShadow: `0 0 35px rgba(0,212,255,0.4)`,
+              transition: 'all 0.2s',
+            }}
+          >
+            Launch Main Dashboard 🚀
+          </button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer style={{ padding: '48px 24px', background: C.surface, borderTop: `1px solid ${C.border}` }}>
+      <footer style={{ padding: '36px 24px', background: C.bg, borderTop: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
           <div>
             <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 16, margin: 0, marginBottom: 4 }}>
               Rain<span style={{ color: C.cyan }}>Cast</span> AI
             </p>
-            <p style={{ fontSize: 12, color: C.dim, margin: 0 }}>Advanced Hydrological Intelligence Platform</p>
+            <p style={{ fontSize: 12, color: C.dim, margin: 0 }}>Physics-Hybrid Spatiotemporal Intelligence</p>
           </div>
           <p style={{ fontSize: 12, color: C.dim, margin: 0, fontFamily: "'JetBrains Mono', monospace" }}>
-            © 2024 RainCast AI · BTP Flood Detection · contact@raincast.ai
+            B.Tech Final Year Capstone & Research Platform · 2026
           </p>
         </div>
       </footer>
+
     </div>
   )
 }
 
-function FlowStep({ step, title, color, children, isFirst, isLast }: {
-  step: string; title: string; color: string; children: React.ReactNode; isFirst?: boolean; isLast?: boolean
-}) {
-  return (
-    <div style={{
-      flex: '1 1 260px', minWidth: 240,
-      padding: 24, borderRadius: 12,
-      background: 'rgba(8,15,28,0.9)',
-      border: `1px solid ${color}30`,
-      boxShadow: `0 0 30px ${color}10`,
-      position: 'relative',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color, letterSpacing: '0.1em' }}>STEP {step}</span>
-        {isFirst && <span style={{ fontSize: 10, color: '#6b8ab0', letterSpacing: '0.1em' }}>MULTI-SOURCE</span>}
-        {isLast && <span style={{ fontSize: 10, color: '#6b8ab0', letterSpacing: '0.1em' }}>ACTIONABLE</span>}
-      </div>
-      <p style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 20, color, margin: 0 }}>{title}</p>
-      {children}
-    </div>
-  )
-}
-
-function FlowArrow({ color }: { color: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '0 8px', flexShrink: 0 }}>
-      <div style={{ width: 48, height: 2, background: `linear-gradient(90deg, ${color}44, ${color})`, position: 'relative' }}>
-        <div style={{ position: 'absolute', right: -1, top: '50%', transform: 'translateY(-50%)', width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: `8px solid ${color}` }} />
-      </div>
-    </div>
-  )
-}

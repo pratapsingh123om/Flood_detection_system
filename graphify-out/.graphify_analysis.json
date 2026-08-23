@@ -10,22 +10,28 @@
       "src_api_getprediction"
     ],
     "3": [
-      "src_api_metric"
+      "src_api_hydrologicalmetrics"
     ],
     "4": [
-      "src_api_modelinfo"
+      "src_api_metric"
     ],
     "5": [
-      "src_api_predictionpayload"
+      "src_api_modelinfo"
     ],
     "6": [
-      "src_api_predictionresponse"
+      "src_api_predictionpayload"
     ],
     "7": [
-      "src_api_riskarea"
+      "src_api_predictionresponse"
     ],
     "8": [
+      "src_api_riskarea"
+    ],
+    "9": [
       "src_api_testdatapoint"
+    ],
+    "10": [
+      "src_api_wardfloodrisk"
     ]
   },
   "cohesion": {
@@ -37,9 +43,16 @@
     "5": 1.0,
     "6": 1.0,
     "7": 1.0,
-    "8": 1.0
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0
   },
   "gods": [
+    {
+      "id": "src_api_wardfloodrisk",
+      "label": "WardFloodRisk",
+      "degree": 0
+    },
     {
       "id": "src_api_forecastday",
       "label": "ForecastDay",
@@ -61,6 +74,11 @@
       "degree": 0
     },
     {
+      "id": "src_api_hydrologicalmetrics",
+      "label": "HydrologicalMetrics",
+      "degree": 0
+    },
+    {
       "id": "src_api_predictionpayload",
       "label": "PredictionPayload",
       "degree": 0
@@ -79,19 +97,14 @@
       "id": "src_api_fetchavailablemodels",
       "label": "fetchAvailableModels",
       "degree": 0
-    },
-    {
-      "id": "src_api_getprediction",
-      "label": "getPrediction",
-      "degree": 0
     }
   ],
   "surprises": [],
   "questions": [
     {
       "type": "isolated_nodes",
-      "question": "What connects `ForecastDay`, `Metric`, `RiskArea` to the rest of the system?",
-      "why": "9 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "question": "What connects `WardFloodRisk`, `ForecastDay`, `Metric` to the rest of the system?",
+      "why": "11 weakly-connected nodes found - possible documentation gaps or missing edges."
     }
   ]
 }
