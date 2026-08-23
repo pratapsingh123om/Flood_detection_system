@@ -2,35 +2,39 @@ import React from 'react';
 
 interface PersonaToggleProps {
   persona: 'hydrologist' | 'planner';
-  onToggle: (persona: 'hydrologist' | 'planner') => void;
+  onToggle?: (persona: 'hydrologist' | 'planner') => void;
+  setPersona?: (persona: 'hydrologist' | 'planner') => void;
 }
 
-export const PersonaToggle: React.FC<PersonaToggleProps> = ({ persona, onToggle }) => {
+export const PersonaToggle: React.FC<PersonaToggleProps> = ({ persona, onToggle, setPersona }) => {
+  const handleToggle = (p: 'hydrologist' | 'planner') => {
+    if (onToggle) onToggle(p);
+    if (setPersona) setPersona(p);
+  };
+
   return (
     <div style={{
       display: 'inline-flex',
       alignItems: 'center',
-      background: 'rgba(15, 23, 42, 0.75)',
-      padding: '4px',
-      borderRadius: '12px',
-      border: '1px solid rgba(255, 255, 255, 0.12)',
-      backdropFilter: 'blur(8px)',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.25)'
+      background: 'var(--bg)',
+      padding: '3px',
+      borderRadius: '8px',
+      border: '1px solid var(--border)',
     }}>
       <button
         type="button"
-        onClick={() => onToggle('planner')}
+        onClick={() => handleToggle('planner')}
         style={{
-          padding: '6px 14px',
-          borderRadius: '8px',
-          fontSize: '13px',
+          padding: '5px 12px',
+          borderRadius: '6px',
+          fontSize: '12px',
           fontWeight: 600,
           border: 'none',
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          background: persona === 'planner' ? 'linear-gradient(135deg, #2563eb, #3b82f6)' : 'transparent',
-          color: persona === 'planner' ? '#ffffff' : '#94a3b8',
-          boxShadow: persona === 'planner' ? '0 2px 8px rgba(37, 99, 235, 0.4)' : 'none'
+          transition: 'all 0.15s ease',
+          background: persona === 'planner' ? 'var(--teal)' : 'transparent',
+          color: persona === 'planner' ? '#ffffff' : 'var(--ink-muted)',
+          boxShadow: persona === 'planner' ? '0 1px 4px rgba(14, 124, 134, 0.25)' : 'none'
         }}
       >
         🛡️ Emergency Planner
@@ -38,21 +42,21 @@ export const PersonaToggle: React.FC<PersonaToggleProps> = ({ persona, onToggle 
 
       <button
         type="button"
-        onClick={() => onToggle('hydrologist')}
+        onClick={() => handleToggle('hydrologist')}
         style={{
-          padding: '6px 14px',
-          borderRadius: '8px',
-          fontSize: '13px',
+          padding: '5px 12px',
+          borderRadius: '6px',
+          fontSize: '12px',
           fontWeight: 600,
           border: 'none',
           cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          background: persona === 'hydrologist' ? 'linear-gradient(135deg, #7c3aed, #8b5cf6)' : 'transparent',
-          color: persona === 'hydrologist' ? '#ffffff' : '#94a3b8',
-          boxShadow: persona === 'hydrologist' ? '0 2px 8px rgba(124, 58, 237, 0.4)' : 'none'
+          transition: 'all 0.15s ease',
+          background: persona === 'hydrologist' ? 'var(--teal)' : 'transparent',
+          color: persona === 'hydrologist' ? '#ffffff' : 'var(--ink-muted)',
+          boxShadow: persona === 'hydrologist' ? '0 1px 4px rgba(14, 124, 134, 0.25)' : 'none'
         }}
       >
-        🔬 Hydrologist / Technical
+        🔬 Hydrologist
       </button>
     </div>
   );

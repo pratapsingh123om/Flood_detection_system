@@ -6,6 +6,7 @@ import {
 import { getPrediction, fetchAvailableModels, ModelInfo, WardFloodRisk } from '../api'
 import { WardMapContainer } from '../components/WardMapContainer'
 import { PersonaToggle } from '../components/PersonaToggle'
+import { getIndoreDefaultWards } from '../data/indoreWards'
 
 export default function DashboardPage() {
   const [activePhase, setActivePhase] = useState<'PHASE_1' | 'PHASE_2' | 'PHASE_3'>('PHASE_1')
@@ -23,7 +24,7 @@ export default function DashboardPage() {
   const [forecastData, setForecastData] = useState<any[]>([])
   const [weatherForecast, setWeatherForecast] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
-  const [wardRisks, setWardRisks] = useState<WardFloodRisk[]>([])
+  const [wardRisks, setWardRisks] = useState<WardFloodRisk[]>(() => getIndoreDefaultWards())
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
 
   // Comparative metrics for CMIP6 & multi-day evaluations
@@ -117,26 +118,29 @@ export default function DashboardPage() {
 
   // Get primary Day 1 forecast readout
   const day1Forecast = weatherForecast && weatherForecast.length > 0 
-    ? weatherForecast[0].rainfall_mm 
+    ? (weatherForecast[0].rainfall_mm ?? weatherForecast[0].rain ?? 52.4)
     : 52.4;
   
   const primaryConfidence = weatherForecast && weatherForecast.length > 0
-    ? weatherForecast[0].confidence || 92
+    ? (weatherForecast[0].confidence ?? 92)
     : 92;
 
-  const currentTensor = weatherForecast && weatherForecast.length > 0 && weatherForecast[0].climate_tensor
-    ? weatherForecast[0].climate_tensor
-    : {
-        tmax_degC: 31.8,
-        tmin_degC: 24.2,
-        dewpoint_degC: 22.4,
-        humidity_pct: 84.0,
-        radiation_wm2: 172.5,
-        wind_speed_ms: 4.8,
-        surface_pressure_hpa: 942.0,
-        soil_moisture: 0.48,
-        evapotranspiration_mm: 3.2
-      };
+  const currentTensor = useMemo(() => {
+    const tensor = (weatherForecast && weatherForecast.length > 0 && weatherForecast[0].climate_tensor)
+      ? weatherForecast[0].climate_tensor
+      : {};
+    return {
+      tmax_degC: typeof tensor.tmax_degC === 'number' ? tensor.tmax_degC : (weatherForecast?.[0]?.tmax_degC ?? weatherForecast?.[0]?.temp ?? 31.8),
+      tmin_degC: typeof tensor.tmin_degC === 'number' ? tensor.tmin_degC : (weatherForecast?.[0]?.tmin_degC ?? 24.2),
+      dewpoint_degC: typeof tensor.dewpoint_degC === 'number' ? tensor.dewpoint_degC : (weatherForecast?.[0]?.dewpoint_degC ?? 22.4),
+      humidity_pct: typeof tensor.humidity_pct === 'number' ? tensor.humidity_pct : (weatherForecast?.[0]?.humidity ?? weatherForecast?.[0]?.humidity_pct ?? 84.0),
+      radiation_wm2: typeof tensor.radiation_wm2 === 'number' ? tensor.radiation_wm2 : (weatherForecast?.[0]?.radiation_wm2 ?? 172.5),
+      wind_speed_ms: typeof tensor.wind_speed_ms === 'number' ? tensor.wind_speed_ms : (weatherForecast?.[0]?.wind_speed ?? weatherForecast?.[0]?.wind_speed_ms ?? 4.8),
+      surface_pressure_hpa: typeof tensor.surface_pressure_hpa === 'number' ? tensor.surface_pressure_hpa : (weatherForecast?.[0]?.surface_pressure_hpa ?? 942.0),
+      soil_moisture: typeof tensor.soil_moisture === 'number' ? tensor.soil_moisture : ((weatherForecast?.[0]?.soil_moisture_pct ?? 48) / 100),
+      evapotranspiration_mm: typeof tensor.evapotranspiration_mm === 'number' ? tensor.evapotranspiration_mm : (weatherForecast?.[0]?.evapotranspiration_mm ?? 3.2)
+    };
+  }, [weatherForecast]);
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--ink)', minHeight: 'calc(100vh - 64px)', padding: '24px 24px 80px' }}>
@@ -271,7 +275,7 @@ export default function DashboardPage() {
 
           {/* Model Selector & Persona Switcher */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <PersonaToggle persona={persona} setPersona={setPersona} />
+            <PersonaToggle persona={persona} onToggle={setPersona} setPersona={setPersona} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: 'var(--ink-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>Model:</span>
@@ -325,7 +329,7 @@ export default function DashboardPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
                     <div>
                       <div style={{ fontSize: 44, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--teal)', lineHeight: 1 }}>
-                        {day1Forecast.toFixed(1)} <span style={{ fontSize: 20, fontWeight: 500, color: 'var(--ink-muted)' }}>mm</span>
+                        {Number(day1Forecast ?? 52.4).toFixed(1)} <span style={{ fontSize: 20, fontWeight: 500, color: 'var(--ink-muted)' }}>mm</span>
                       </div>
                       <div style={{ fontSize: 13, color: 'var(--ink-muted)', marginTop: 6 }}>
                         Predicted Precipitation Volume
@@ -336,11 +340,11 @@ export default function DashboardPage() {
                     <div style={{ position: 'relative', width: 84, height: 84, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="84" height="84" viewBox="0 0 84 84" style={{ transform: 'rotate(-90deg)' }}>
                         <circle cx="42" cy="42" r="34" stroke="#EDF2EE" strokeWidth="6" fill="none" />
-                        <circle cx="42" cy="42" r="34" stroke="var(--teal)" strokeWidth="6" fill="none" strokeDasharray="213.6" strokeDashoffset={`${213.6 * (1 - primaryConfidence / 100)}`} strokeLinecap="round" />
+                        <circle cx="42" cy="42" r="34" stroke="var(--teal)" strokeWidth="6" fill="none" strokeDasharray="213.6" strokeDashoffset={`${213.6 * (1 - (Number(primaryConfidence) || 92) / 100)}`} strokeLinecap="round" />
                       </svg>
                       <div style={{ position: 'absolute', textAlign: 'center' }}>
                         <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--teal)', display: 'block' }}>
-                          {primaryConfidence}%
+                          {Number(primaryConfidence ?? 92)}%
                         </span>
                         <span style={{ fontSize: 9, color: 'var(--ink-muted)', textTransform: 'uppercase' }}>Confidence</span>
                       </div>
@@ -476,13 +480,13 @@ export default function DashboardPage() {
                         </span>
                       </div>
 
-                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: day.rainfall_mm > 25 ? 'var(--risk-high)' : 'var(--teal)', margin: '4px 0' }}>
-                        {day.rainfall_mm.toFixed(1)} <span style={{ fontSize: 11, color: 'var(--ink-muted)' }}>mm</span>
+                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: (Number(day.rainfall_mm) || 0) > 25 ? 'var(--risk-high)' : 'var(--teal)', margin: '4px 0' }}>
+                        {Number(day.rainfall_mm ?? 0).toFixed(1)} <span style={{ fontSize: 11, color: 'var(--ink-muted)' }}>mm</span>
                       </div>
 
                       <div style={{ fontSize: 11, color: 'var(--ink-muted)', lineHeight: 1.4 }}>
-                        <div>Inund: <strong>{day.inundation_depth_cm ? day.inundation_depth_cm.toFixed(1) : (day.rainfall_mm * 0.4).toFixed(1)} cm</strong></div>
-                        <div>Soil: <strong>{(day.soil_moisture_pct || 48)}%</strong></div>
+                        <div>Inund: <strong>{Number(day.inundation_depth_cm ?? (day.rainfall_mm ? day.rainfall_mm * 0.4 : 0)).toFixed(1)} cm</strong></div>
+                        <div>Soil: <strong>{Number(day.soil_moisture_pct ?? 48)}%</strong></div>
                       </div>
                     </div>
                   ))
@@ -515,56 +519,56 @@ export default function DashboardPage() {
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Tmax / Tmin</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink)', marginTop: 4 }}>
-                    {currentTensor.tmax_degC.toFixed(1)}° / {currentTensor.tmin_degC.toFixed(1)}°C
+                    {Number(currentTensor.tmax_degC ?? 31.8).toFixed(1)}° / {Number(currentTensor.tmin_degC ?? 24.2).toFixed(1)}°C
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Dewpoint</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink)', marginTop: 4 }}>
-                    {currentTensor.dewpoint_degC.toFixed(1)}°C
+                    {Number(currentTensor.dewpoint_degC ?? 22.4).toFixed(1)}°C
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Humidity</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--teal)', marginTop: 4 }}>
-                    {currentTensor.humidity_pct.toFixed(0)}%
+                    {Number(currentTensor.humidity_pct ?? 84.0).toFixed(0)}%
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Solar Rad</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink)', marginTop: 4 }}>
-                    {currentTensor.radiation_wm2.toFixed(0)} W/m²
+                    {Number(currentTensor.radiation_wm2 ?? 172.5).toFixed(0)} W/m²
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Wind Speed</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink)', marginTop: 4 }}>
-                    {currentTensor.wind_speed_ms.toFixed(1)} m/s
+                    {Number(currentTensor.wind_speed_ms ?? 4.8).toFixed(1)} m/s
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Pressure</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink)', marginTop: 4 }}>
-                    {currentTensor.surface_pressure_hpa.toFixed(0)} hPa
+                    {Number(currentTensor.surface_pressure_hpa ?? 942.0).toFixed(0)} hPa
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Soil Moisture</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--teal)', marginTop: 4 }}>
-                    {(currentTensor.soil_moisture * 100).toFixed(0)}%
+                    {(Number(currentTensor.soil_moisture ?? 0.48) * 100).toFixed(0)}%
                   </div>
                 </div>
 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Evapotranspiration</span>
                   <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink)', marginTop: 4 }}>
-                    {currentTensor.evapotranspiration_mm.toFixed(1)} mm
+                    {Number(currentTensor.evapotranspiration_mm ?? 3.2).toFixed(1)} mm
                   </div>
                 </div>
 

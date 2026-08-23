@@ -219,10 +219,10 @@ export const WardMapContainer: React.FC<WardMapContainerProps> = ({ wardRisks, o
                             W-{w.ward_id}: {w.ward_name}
                           </strong>
                           <div style={{ fontSize: 11, color: color, fontWeight: 700, marginTop: 2 }}>
-                            {w.risk_level} RISK ({(w.risk_score * 100).toFixed(0)}%)
+                            {w.risk_level} RISK ({(Number(w.risk_score ?? 0) * 100).toFixed(0)}%)
                           </div>
                           <div style={{ fontSize: 11, color: '#5B6B76', marginTop: 2 }}>
-                            Inundation: {w.inundation_depth_cm.toFixed(1)} cm
+                            Inundation: {Number(w.inundation_depth_cm ?? 0).toFixed(1)} cm
                           </div>
                         </div>
                       </Popup>
@@ -291,7 +291,7 @@ export const WardMapContainer: React.FC<WardMapContainerProps> = ({ wardRisks, o
                         {w.ward_name}
                       </div>
                       <div style={{ fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: color, fontWeight: 700, marginTop: 2 }}>
-                        {(w.risk_score * 100).toFixed(0)}% Risk
+                        {(Number(w.risk_score ?? 0) * 100).toFixed(0)}% Risk
                       </div>
                     </button>
                   );
@@ -357,22 +357,22 @@ export const WardMapContainer: React.FC<WardMapContainerProps> = ({ wardRisks, o
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 4, marginBottom: 4 }}>
                   <span>Hazard (H = R × W × S):</span>
-                  <strong style={{ color: 'var(--ink)' }}>{selectedWard.hazard_score.toFixed(3)}</strong>
+                  <strong style={{ color: 'var(--ink)' }}>{Number(selectedWard.hazard_score ?? 0).toFixed(3)}</strong>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 4, marginBottom: 4 }}>
                   <span>Vulnerability (V = D×NDVI×NDWI×E×TPI):</span>
-                  <strong style={{ color: 'var(--ink)' }}>{selectedWard.vulnerability_score.toFixed(3)}</strong>
+                  <strong style={{ color: 'var(--ink)' }}>{Number(selectedWard.vulnerability_score ?? 0).toFixed(3)}</strong>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: 4, marginBottom: 4 }}>
                   <span>Exposure (E = Pop):</span>
-                  <strong style={{ color: 'var(--ink)' }}>{selectedWard.exposure_score.toFixed(3)}</strong>
+                  <strong style={{ color: 'var(--ink)' }}>{Number(selectedWard.exposure_score ?? 0).toFixed(3)}</strong>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 4, color: getRiskColor(selectedWard.risk_level), fontWeight: 700, fontSize: 13 }}>
                   <span>Total Risk (0.80H + 0.15V + 0.05E):</span>
-                  <span>{(selectedWard.risk_score * 100).toFixed(1)}%</span>
+                  <span>{(Number(selectedWard.risk_score ?? 0) * 100).toFixed(1)}%</span>
                 </div>
               </div>
 
@@ -386,10 +386,10 @@ export const WardMapContainer: React.FC<WardMapContainerProps> = ({ wardRisks, o
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", marginBottom: 2 }}>
                     <span>Runoff Inundation</span>
-                    <strong>{selectedWard.inundation_depth_cm.toFixed(1)} cm</strong>
+                    <strong>{Number(selectedWard.inundation_depth_cm ?? 0).toFixed(1)} cm</strong>
                   </div>
                   <div style={{ height: 6, background: '#E2E8E5', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.min(100, selectedWard.inundation_depth_cm * 2.5)}%`, height: '100%', background: 'var(--teal)' }} />
+                    <div style={{ width: `${Math.min(100, (Number(selectedWard.inundation_depth_cm) || 0) * 2.5)}%`, height: '100%', background: 'var(--teal)' }} />
                   </div>
                 </div>
 
@@ -397,10 +397,10 @@ export const WardMapContainer: React.FC<WardMapContainerProps> = ({ wardRisks, o
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", marginBottom: 2 }}>
                     <span>Elevation (SRTM DEM)</span>
-                    <strong>{selectedWard.elevation_m.toFixed(0)} m</strong>
+                    <strong>{Number(selectedWard.elevation_m ?? 540).toFixed(0)} m</strong>
                   </div>
                   <div style={{ height: 6, background: '#E2E8E5', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.min(100, (selectedWard.elevation_m - 500) * 1.5)}%`, height: '100%', background: 'var(--sky)' }} />
+                    <div style={{ width: `${Math.min(100, ((Number(selectedWard.elevation_m) || 540) - 500) * 1.5)}%`, height: '100%', background: 'var(--sky)' }} />
                   </div>
                 </div>
 
@@ -408,10 +408,10 @@ export const WardMapContainer: React.FC<WardMapContainerProps> = ({ wardRisks, o
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", marginBottom: 2 }}>
                     <span>Distance to Water Body</span>
-                    <strong>{selectedWard.distance_to_water_m.toFixed(0)} m</strong>
+                    <strong>{Number(selectedWard.distance_to_water_m ?? 500).toFixed(0)} m</strong>
                   </div>
                   <div style={{ height: 6, background: '#E2E8E5', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.max(10, 100 - selectedWard.distance_to_water_m / 25)}%`, height: '100%', background: 'var(--ochre)' }} />
+                    <div style={{ width: `${Math.max(10, 100 - (Number(selectedWard.distance_to_water_m) || 500) / 25)}%`, height: '100%', background: 'var(--ochre)' }} />
                   </div>
                 </div>
 
@@ -419,10 +419,10 @@ export const WardMapContainer: React.FC<WardMapContainerProps> = ({ wardRisks, o
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", marginBottom: 2 }}>
                     <span>Population Density</span>
-                    <strong>{selectedWard.population.toLocaleString()}</strong>
+                    <strong>{(Number(selectedWard.population) || 0).toLocaleString()}</strong>
                   </div>
                   <div style={{ height: 6, background: '#E2E8E5', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.min(100, selectedWard.population / 600)}%`, height: '100%', background: 'var(--ink-muted)' }} />
+                    <div style={{ width: `${Math.min(100, (Number(selectedWard.population) || 0) / 600)}%`, height: '100%', background: 'var(--ink-muted)' }} />
                   </div>
                 </div>
               </div>
