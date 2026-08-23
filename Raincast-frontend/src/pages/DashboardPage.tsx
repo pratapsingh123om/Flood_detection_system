@@ -3,7 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
 } from 'recharts'
-import { getPrediction, fetchAvailableModels, ModelInfo, WardFloodRisk } from '../api'
+import { getPrediction, fetchAvailableModels, ModelInfo, WardFloodRisk, DEFAULT_MODELS } from '../api'
 import { WardMapContainer } from '../components/WardMapContainer'
 import { PersonaToggle } from '../components/PersonaToggle'
 import { getIndoreDefaultWards } from '../data/indoreWards'
@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [weatherForecast, setWeatherForecast] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
   const [wardRisks, setWardRisks] = useState<WardFloodRisk[]>(() => getIndoreDefaultWards())
-  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>(() => DEFAULT_MODELS)
 
   // Comparative metrics for CMIP6 & multi-day evaluations
   const comparativeMetrics = useMemo(() => {

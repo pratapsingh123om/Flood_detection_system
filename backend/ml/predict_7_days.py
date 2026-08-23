@@ -7,7 +7,7 @@ import math
 from datetime import datetime, timedelta
 from ml.preprocess import get_latest_features
 
-INFERENCE_URL = os.getenv("INFERENCE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
+INFERENCE_URL = os.getenv("INFERENCE_URL", "https://btp-flood-detection-system-775429752478.europe-west1.run.app/api")
 
 def predict_7_days(model_name: str, location: str, runoff: float, elevation: float, drainage: float) -> list:
     """
