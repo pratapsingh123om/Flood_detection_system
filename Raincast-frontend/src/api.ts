@@ -141,38 +141,64 @@ export interface ModelInfo {
   name: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://btp-flood-detection-system-775429752478.europe-west1.run.app/api";
+const DEFAULT_ENDPOINTS = [
+  import.meta.env.VITE_API_URL,
+  "http://localhost:8000/api",
+  "http://127.0.0.1:8000/api",
+  "https://btp-flood-detection-system-775429752478.europe-west1.run.app/api"
+].filter(Boolean) as string[];
+
+let activeApiBase = DEFAULT_ENDPOINTS[0];
 
 export async function fetchAvailableModels(): Promise<ModelInfo[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/models`);
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+  for (const endpoint of DEFAULT_ENDPOINTS) {
+    try {
+      const response = await fetch(`${endpoint}/models`, { signal: AbortSignal.timeout(3000) });
+      if (response.ok) {
+        const data = await response.json();
+        activeApiBase = endpoint;
+        return data.models;
+      }
+    } catch {
+      // try next endpoint
     }
-    const data = await response.json();
-    return data.models;
-  } catch (err) {
-    return [
-      { id: "unet_lstm_bias", name: "Hybrid U-Net + LSTM (PyTorch)" },
-      { id: "unet_rf_bias", name: "Hybrid U-Net + XGBoost" },
-      { id: "unet_bias_model", name: "U-Net AI Bias Calibrator (Keras)" }
-    ];
   }
+
+  return [
+    { id: "upgraded_extreme_hybrid_pipeline", name: "Hybrid U-Net + LSTM (PyTorch)" },
+    { id: "xgboost_model", name: "Hybrid U-Net + XGBoost" },
+    { id: "randomforest_model", name: "Random Forest Regressor" },
+    { id: "tuned_asym_hybrid", name: "Asymmetric Heavy Rain Pipeline" }
+  ];
 }
 
 export async function getPrediction(payload: PredictionPayload): Promise<PredictionResponse> {
-  const response = await fetch(`${API_BASE_URL}/predict`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  const candidateEndpoints = [activeApiBase, ...DEFAULT_ENDPOINTS.filter(e => e !== activeApiBase)];
+  let lastError: any = null;
 
-  if (!response.ok) {
-    throw new Error(`API error: ${response.statusText}`);
+  for (const endpoint of candidateEndpoints) {
+    try {
+      const response = await fetch(`${endpoint}/predict`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(8000)
+      });
+
+      if (response.ok) {
+        activeApiBase = endpoint;
+        return await response.json();
+      } else {
+        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  return response.json();
+  throw lastError || new Error("All backend prediction endpoints are unreachable.");
 }
+
 

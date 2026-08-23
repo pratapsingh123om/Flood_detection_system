@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [drainage, setDrainage] = useState(65)
   
   const [loading, setLoading] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const [forecastData, setForecastData] = useState<any[]>([])
   const [weatherForecast, setWeatherForecast] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
@@ -115,38 +116,39 @@ export default function DashboardPage() {
     loadModels()
   }, [])
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        const data = await getPrediction({
-          location,
-          model,
-          timeframe,
-          baseline_model: baselineModel,
-          runoff,
-          elevation,
-          drainage,
-          persona
-        })
-        setForecastData(data.test_data)
-        setWeatherForecast(data.weather_forecast)
-        setMetrics(data.metrics)
-        setRiskAreas(data.risk_areas)
-        if (data.ward_risks) {
-          setWardRisks(data.ward_risks)
-        }
-      } catch (err) {
-        console.error("Failed to load prediction data", err)
-      } finally {
-        setLoading(false)
+  const loadData = async () => {
+    setLoading(true)
+    setApiError(null)
+    try {
+      const data = await getPrediction({
+        location,
+        model,
+        timeframe,
+        baseline_model: baselineModel,
+        runoff,
+        elevation,
+        drainage,
+        persona
+      })
+      setForecastData(data.test_data || [])
+      setWeatherForecast(data.weather_forecast || [])
+      setMetrics(data.metrics || [])
+      setRiskAreas(data.risk_areas || [])
+      if (data.ward_risks) {
+        setWardRisks(data.ward_risks)
       }
+    } catch (err: any) {
+      console.error("Failed to load prediction data", err)
+      setApiError(err?.message || "Failed to connect to backend prediction model.")
+    } finally {
+      setLoading(false)
     }
-    
+  }
+
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
       loadData()
-    }, 500)
-    
+    }, 300)
     return () => clearTimeout(timeoutId)
   }, [location, model, timeframe, baselineModel, runoff, elevation, drainage, persona])
 
@@ -239,6 +241,35 @@ export default function DashboardPage() {
 
       {/* Main Content Body */}
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
+
+        {/* Dynamic Connection Error Banner */}
+        {apiError && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            borderRadius: 12, padding: '14px 20px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginBottom: 20, flexWrap: 'wrap', gap: 12
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20 }}>⚠️</span>
+              <span style={{ color: '#fca5a5', fontSize: 13, lineHeight: 1.4 }}>
+                <strong>Backend Connection Notice:</strong> {apiError} (Ensure local backend is running at <code style={{ color: C.cyan }}>http://localhost:8000/api</code>)
+              </span>
+            </div>
+            <button
+              onClick={() => loadData()}
+              style={{
+                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                color: '#fff', border: 'none',
+                padding: '8px 18px', borderRadius: 8,
+                fontSize: 12, fontWeight: 700, cursor: 'pointer'
+              }}
+            >
+              🔄 Retry Connection
+            </button>
+          </div>
+        )}
 
         {/* PHASE 1: RAINFALL PREDICTION (ACTIVE / LIVE) */}
         {activePhase === 'PHASE_1' && (
