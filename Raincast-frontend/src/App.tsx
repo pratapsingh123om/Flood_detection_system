@@ -10,14 +10,14 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
+    const onScroll = () => setScrolled(window.scrollY > 15)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#04080f', fontFamily: "'Inter', sans-serif" }}>
-      {/* Nav */}
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)', fontFamily: "'Inter', sans-serif" }}>
+      {/* Global Navigation Bar */}
       <nav
         style={{
           position: 'fixed',
@@ -25,57 +25,64 @@ export default function App() {
           left: 0,
           right: 0,
           zIndex: 100,
-          background: scrolled ? 'rgba(4, 8, 15, 0.95)' : 'rgba(4, 8, 15, 0.75)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(0, 212, 255, 0.12)',
-          transition: 'background 0.3s ease',
+          background: scrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid var(--border)',
+          transition: 'all 0.2s ease',
         }}
       >
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
-          {/* Logo */}
+        <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+          
+          {/* Logo with Isohyet Contour Glyph */}
           <NavLink to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #00d4ff, #06ffa5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(0,212,255,0.4)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7l9 5 9-5-9-5zM3 17l9 5 9-5M3 12l9 5 9-5" stroke="#04080f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="#FFFFFF" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6"/>
+                <circle cx="12" cy="12" r="6" stroke="#FFFFFF" strokeWidth="1.75"/>
+                <circle cx="12" cy="12" r="2.5" fill="#FFFFFF"/>
               </svg>
             </div>
-            <span style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 18, color: '#e2eaf5', letterSpacing: '-0.02em' }}>
-              Rain<span style={{ color: '#00d4ff' }}>Cast</span>
-              <span style={{ fontSize: 11, fontWeight: 500, color: '#6b8ab0', marginLeft: 4 }}>AI</span>
-            </span>
+            <div>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
+                RainCast <span style={{ color: 'var(--teal)', fontWeight: 600 }}>AI</span>
+              </span>
+              <span style={{ display: 'block', fontSize: 10, color: 'var(--ink-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: -2 }}>
+                Indore Flood Instrument
+              </span>
+            </div>
           </NavLink>
 
-          {/* Links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Navigation Links + CTA Button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <NavLink
               to="/"
               end
               style={({ isActive }) => ({
                 textDecoration: 'none',
-                padding: '6px 14px',
+                padding: '8px 14px',
                 borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 500,
-                color: isActive ? '#00d4ff' : '#94a3b8',
-                background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
-                transition: 'all 0.2s',
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 500,
+                color: isActive ? 'var(--teal)' : 'var(--ink-muted)',
+                background: isActive ? 'var(--teal-light)' : 'transparent',
+                transition: 'all 0.15s ease',
               })}
             >
-              Overview
+              Home
             </NavLink>
 
             <NavLink
               to="/progress"
               style={({ isActive }) => ({
                 textDecoration: 'none',
-                padding: '6px 14px',
+                padding: '8px 14px',
                 borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 500,
-                color: isActive ? '#00d4ff' : '#94a3b8',
-                background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
-                transition: 'all 0.2s',
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 500,
+                color: isActive ? 'var(--teal)' : 'var(--ink-muted)',
+                background: isActive ? 'var(--teal-light)' : 'transparent',
+                transition: 'all 0.15s ease',
               })}
             >
               Progress Flow
@@ -85,41 +92,47 @@ export default function App() {
               to="/about"
               style={({ isActive }) => ({
                 textDecoration: 'none',
-                padding: '6px 14px',
+                padding: '8px 14px',
                 borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 500,
-                color: isActive ? '#00d4ff' : '#94a3b8',
-                background: isActive ? 'rgba(0,212,255,0.08)' : 'transparent',
-                transition: 'all 0.2s',
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 500,
+                color: isActive ? 'var(--teal)' : 'var(--ink-muted)',
+                background: isActive ? 'var(--teal-light)' : 'transparent',
+                transition: 'all 0.15s ease',
               })}
             >
-              About Us
+              About
             </NavLink>
+
+            <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 8px' }} />
 
             <NavLink
               to="/dashboard"
-              style={({ isActive }) => ({
+              style={{
                 textDecoration: 'none',
-                padding: '7px 20px',
+                background: 'var(--teal)',
+                color: '#FFFFFF',
+                padding: '8px 18px',
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#04080f',
-                background: 'linear-gradient(135deg, #00d4ff, #06ffa5)',
-                boxShadow: '0 0 20px rgba(0,212,255,0.3)',
-                transition: 'all 0.2s',
-                marginLeft: 6
-              })}
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '0 2px 6px rgba(14, 124, 134, 0.25)',
+                transition: 'background 0.15s ease',
+              }}
             >
-              Launch Dashboard 🚀
+              <span>Dashboard</span>
+              <span style={{ fontSize: 15 }}>→</span>
             </NavLink>
           </div>
+
         </div>
       </nav>
 
-      {/* Page content */}
-      <div style={{ paddingTop: 60 }}>
+      {/* Main Content Router */}
+      <div style={{ paddingTop: 64 }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/progress" element={<ProgressPage />} />
@@ -130,4 +143,3 @@ export default function App() {
     </div>
   )
 }
-

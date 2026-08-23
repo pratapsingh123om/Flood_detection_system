@@ -1,90 +1,141 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
-
-const C = {
-  cyan: '#00d4ff',
-  green: '#06ffa5',
-  bg: '#04080f',
-  surface: '#080f1c',
-  panel: '#0c1525',
-  border: '#1a2d4a',
-  text: '#e2eaf5',
-  muted: '#6b8ab0',
-}
+import { Link } from 'react-router-dom'
 
 export default function AboutPage() {
-  const navigate = useNavigate()
-
   return (
-    <div style={{ background: C.bg, color: C.text, minHeight: '88vh', padding: '60px 24px', fontFamily: "'Inter', sans-serif" }}>
-      <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '4px 14px', borderRadius: 20,
-          background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.25)',
-          fontSize: 12, fontWeight: 600, color: C.cyan,
-          fontFamily: "'JetBrains Mono', monospace", marginBottom: 24
-        }}>
-          👥 ABOUT US · PROJECT RAINCAST AI
-        </div>
+    <div style={{ background: 'var(--bg)', color: 'var(--ink)', minHeight: 'calc(100vh - 64px)', padding: '50px 24px 80px' }}>
+      
+      <div style={{ maxWidth: 880, margin: '0 auto' }}>
+        
+        {/* Header & Mission */}
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          
+          <div style={{
+            width: 56,
+            height: 56,
+            borderRadius: 14,
+            background: 'var(--teal)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 20,
+            boxShadow: '0 4px 12px rgba(14, 124, 134, 0.25)'
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="#FFFFFF" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6"/>
+              <circle cx="12" cy="12" r="6" stroke="#FFFFFF" strokeWidth="1.75"/>
+              <circle cx="12" cy="12" r="2.5" fill="#FFFFFF"/>
+            </svg>
+          </div>
 
-        <h1 style={{
-          fontFamily: "'Exo 2', sans-serif",
-          fontSize: 'clamp(32px, 4vw, 48px)',
-          fontWeight: 800,
-          marginBottom: 20,
-          background: `linear-gradient(135deg, ${C.text}, ${C.muted})`,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>
-          Research & Engineering Team
-        </h1>
+          <h1 style={{ fontSize: 34, fontWeight: 700, margin: '0 0 12px' }}>
+            About RainCast AI
+          </h1>
 
-        <p style={{ fontSize: 16, color: C.muted, lineHeight: 1.7, marginBottom: 40 }}>
-          RainCast AI is developed as an academic and technological initiative exploring Physics-Hybrid Spatiotemporal Deep Learning for extreme rainfall forecasting and urban flood risk inundation mapping.
-        </p>
-
-        <div style={{
-          background: C.panel,
-          border: `1px solid ${C.border}`,
-          borderRadius: 16,
-          padding: '40px 24px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          marginBottom: 36
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>🏛️</div>
-          <h3 style={{ margin: '0 0 8px', fontSize: 18, color: C.cyan, fontWeight: 700 }}>
-            Academic B.Tech Capstone & Research Initiative
-          </h3>
-          <p style={{ color: C.muted, fontSize: 14, margin: 0, lineHeight: 1.6 }}>
-            Combining 75 years of ERA5 reanalysis data, 30m SRTM topographical elevation models, and the IPCC Disaster Risk Framework to protect urban catchments against extreme precipitation hazards.
+          <p style={{ fontSize: 17, color: 'var(--ink-muted)', maxWidth: 640, margin: '0 auto', lineHeight: 1.6 }}>
+            An open scientific research instrument developed for Indore, pioneering physics-gated machine learning for micro-catchment monsoon rainfall prediction and IPCC urban flood risk quantification.
           </p>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12 }}>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '10px 20px', borderRadius: 8,
-              background: 'transparent', border: `1px solid ${C.border}`,
-              color: C.text, fontSize: 13, fontWeight: 600, cursor: 'pointer'
-            }}
-          >
-            ← Back to Landing
-          </button>
-          <button
-            onClick={() => navigate('/dashboard')}
-            style={{
-              padding: '10px 24px', borderRadius: 8,
-              background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
-              border: 'none', color: '#04080f', fontSize: 13, fontWeight: 700,
-              cursor: 'pointer', boxShadow: '0 0 20px rgba(0,212,255,0.25)'
-            }}
-          >
-            Launch Dashboard →
-          </button>
+        {/* Research Core & Affiliations */}
+        <div className="card-instrument" style={{ padding: 32, marginBottom: 32 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 18, fontWeight: 700 }}>
+            Scientific Objective & Scope
+          </h3>
+          <p style={{ fontSize: 14, color: 'var(--ink-muted)', lineHeight: 1.7, margin: '0 0 16px' }}>
+            RainCast AI addresses the critical spatial gap between synoptic-scale numerical weather predictions (ECMWF / IMD GFS) and localized street-level urban inundation. By solving 9-variable atmospheric dynamics and 2D SCS-CN hydrological routing together, the platform generates auditable, ward-level flood vulnerability metrics for municipal emergency planners.
+          </p>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <span className="stat-chip">Indore Municipal Corporation (IMC)</span>
+            <span className="stat-chip">75-Year ERA5 Dataset</span>
+            <span className="stat-chip">85 Municipal Wards</span>
+          </div>
         </div>
+
+        {/* Team Grid with Isohyet-Ring Blank Circle Placeholders */}
+        <div style={{ marginBottom: 48 }}>
+          <h3 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 20px', textAlign: 'center' }}>
+            Research Contributors & Hydrological Engineers
+          </h3>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+            
+            {[
+              { role: "Machine Learning & Spatio-Temporal Models", spec: "PyTorch U-Net & Gated Pipelines" },
+              { role: "Hydrological Modeling & GIS", spec: "SCS-CN Runoff & SRTM DEM Topography" },
+              { role: "Climate Data Engineering", spec: "ERA5 75-Yr & CMIP6 HighResMIP Sync" }
+            ].map((member, idx) => (
+              <div key={idx} className="card-instrument" style={{ padding: 24, textAlign: 'center' }}>
+                
+                {/* Isohyet Ring Avatar Placeholder */}
+                <div style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: '50%',
+                  margin: '0 auto 16px',
+                  background: 'var(--bg)',
+                  border: '1px dashed var(--teal)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative'
+                }}>
+                  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" opacity={0.4}>
+                    <circle cx="24" cy="24" r="20" stroke="var(--teal)" strokeWidth="1" strokeDasharray="3 3"/>
+                    <circle cx="24" cy="24" r="13" stroke="var(--teal)" strokeWidth="1"/>
+                    <circle cx="24" cy="24" r="5" fill="var(--teal)"/>
+                  </svg>
+                </div>
+
+                <h4 style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700 }}>
+                  {member.role}
+                </h4>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                  {member.spec}
+                </p>
+              </div>
+            ))}
+
+          </div>
+        </div>
+
+        {/* Contact & Open Collaboration */}
+        <div style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          padding: '24px 32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 16
+        }}>
+          <div>
+            <h4 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700 }}>Open Collaboration & Inquiries</h4>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-muted)' }}>
+              Interested in integrating municipal gauge feeds or validating against other basins?
+            </p>
+          </div>
+
+          <a
+            href="mailto:research@raincast.ai"
+            style={{
+              textDecoration: 'none',
+              background: 'var(--teal)',
+              color: '#FFFFFF',
+              padding: '10px 20px',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: "'IBM Plex Mono', monospace"
+            }}
+          >
+            Contact Research Team
+          </a>
+        </div>
+
       </div>
+
     </div>
   )
 }

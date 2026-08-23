@@ -1,261 +1,332 @@
-const C = {
-  cyan: '#00d4ff',
-  green: '#06ffa5',
-  amber: '#f59e0b',
-  purple: '#7c5af5',
-  red: '#ff4d6d',
-  bg: '#04080f',
-  surface: '#080f1c',
-  panel: '#0c1525',
-  border: '#1a2d4a',
-  text: '#e2eaf5',
-  muted: '#6b8ab0',
-  dim: '#3d5a7a',
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+
+type FilterType = 'all' | 'architecture' | 'data' | 'validation';
+
+interface CommitLogItem {
+  version: string;
+  isCurrentBest?: boolean;
+  category: 'architecture' | 'data' | 'validation';
+  title: string;
+  date: string;
+  commitHash: string;
+  whatChanged: string;
+  why: string;
+  method: string;
+  metricBeforeAfter: {
+    metric: string;
+    before: string;
+    after: string;
+    improved: boolean;
+  }[];
+  whatWeLearned: string;
 }
 
-const changelog = [
-  {
-    version: 'v1.0.0 (Current Best)',
-    date: '2026-08-23',
-    tag: 'IPCC Disaster Risk & AHP Engine',
-    tagColor: C.cyan,
-    added: [
-      'Full IPCC Disaster Risk Framework (Risk = Hazard × Vulnerability × Exposure)',
-      'AHP Multi-Criteria Weighting (0.80 Hazard + 0.15 Vulnerability + 0.05 Exposure = 1.00)',
-      '85-Ward 2D Inundation Physics (D, NDVI, NDWI, Elevation, TPI, Slope %)',
-      'Multi-Depth Soil Moisture Profile Strata (5m, 10m, 20m)',
-      'LULC Multi-Decadal Historical & Future Epochs (2000–2050)',
-    ],
-    why: 'True flood intelligence requires converting raw predicted precipitation into spatial inundation depth and multiplying by physical terrain vulnerability and demographic exposure rather than simply guessing river overflow.',
-    improved: [
-      { label: 'Spatial Granularity', from: 'City Level', to: '85 Municipal Wards', delta: 'Hyper-Local' },
-      { label: 'Risk Equation', from: 'Empirical Heuristic', to: 'Formal IPCC & AHP (0.80/0.15/0.05)', delta: 'Physics-Based' },
-      { label: 'Ward Exposure', from: 'Static Count', to: 'GHSL 5-Yr Epochs + Census 2011', delta: 'Dynamic' },
-    ],
-  },
-  {
-    version: 'v0.6.0',
-    date: '2026-08-18',
-    tag: 'Cloud Run & TFLite Quantization',
-    tagColor: C.purple,
-    added: [
-      'Deployed Spatio-Temporal U-Net Microservice to Google Cloud Run',
-      'TFLite 16-Bit Float Quantization (shrunk model from 1.5GB to 300MB)',
-      'U-Net AI Bias Calibrator Microservice for systematic over-prediction removal',
-    ],
-    why: 'The unquantized 75-million parameter spatial model crashed standard serverless instances. TFLite quantization reduced RAM consumption by 80% with less than 1% degradation in prediction accuracy.',
-    improved: [
-      { label: 'Model Footprint', from: '1.5 GB (PyTorch Full)', to: '300 MB (TFLite Quantized)', delta: '-80%' },
-      { label: 'Overall Accuracy', from: '81.6% (Base U-Net)', to: '95.9% (Bias Calibrator)', delta: '+14.3%' },
-      { label: 'Latency', from: 'Local Crash', to: '120ms Cloud Response', delta: 'Serverless' },
-    ],
-  },
-  {
-    version: 'v0.5.0',
-    date: '2026-08-15',
-    tag: 'Live 2026 Out-of-Sample Validation',
-    tagColor: C.green,
-    added: [
-      'Real-world 2026 Monsoon OpenMeteo Live API Integration (June–August 2026)',
-      'Dynamic Confusion Matrix & Hydrological Metrics Engine (NSE, CSI, POD, FAR)',
-      'Extreme Event Accuracy (Ext Acc) Metric for Floods >30mm/day',
-    ],
-    why: 'Testing models only on synthetic holdouts leads to overoptimism. Real-world validation against active 2026 monsoon events verifies true generalization in operational conditions.',
-    improved: [
-      { label: 'Extreme Accuracy (>30mm)', from: '89.8%', to: '93.9%', delta: '+4.1%' },
-      { label: 'Validation Ground Truth', from: 'Historical Static CSV', to: 'Live OpenMeteo Observations', delta: 'Dynamic' },
-      { label: 'Extreme False Alarm Rate', from: '18.4%', to: '5.0%', delta: '-72.8%' },
-    ],
-  },
-  {
-    version: 'v0.4.0',
-    date: '2026-08-12',
-    tag: 'Spatio-Temporal Hybrid Architecture',
-    tagColor: C.red,
-    added: [
-      'Hybrid U-Net + LSTM (PyTorch) for combined Spatial-Temporal modeling',
-      'Hybrid U-Net + XGBoost for sharp non-linear flood threshold classification',
-      'Google Cloud TPU v3-8 training pipeline for 47-year tensor compilation',
-    ],
-    why: 'Single models miss either the spatial terrain context (mountains, river slopes) or sequential storm accumulation. Fusing U-Net spatial feature maps with temporal LSTM sequences eliminates this dilemma.',
-    improved: [
-      { label: 'Critical Success Index (CSI)', from: '0.480 (XGBoost alone)', to: '0.814 (Upgraded Hybrid)', delta: '+69.5%' },
-      { label: 'Probability of Detection', from: '78.2%', to: '95.0%', delta: '+16.8%' },
-      { label: 'Training Convergence', from: '14 hrs (GPU)', to: '42 mins (TPU v3-8)', delta: '20x Faster' },
-    ],
-  },
-  {
-    version: 'v0.3.0',
-    date: '2026-08-08',
-    tag: '9-Parameter Atmospheric Tensor',
-    tagColor: C.cyan,
-    added: [
-      'Full 9-Parameter Climate Tensor (Tmax, Tmin, Dewpoint, RH, SW/LW Radiation, Wind U/V, SLP, Geopotential)',
-      'Diurnal Temperature Range (DTR = Tmax - Tmin) & Dewpoint Spread',
-      'Cyclical Day-of-Year Encodings (sin_day, cos_day)',
-    ],
-    why: 'Extreme convective monsoon storms are physically preceded by atmospheric pressure drops, moisture convergence, and thermal inversions that raw rainfall history cannot detect.',
-    improved: [
-      { label: 'Feature Dimensionality', from: '11 Raw Columns', to: '71 Physics Features', delta: '+60 Features' },
-      { label: 'Precursor Correlation', from: 'r = 0.45', to: 'r = 0.78', delta: '+73.3%' },
-    ],
-  },
-  {
-    version: 'v0.2.0',
-    date: '2026-08-02',
-    tag: 'Feature Engineering & Lags',
-    tagColor: C.amber,
-    added: [
-      'Multi-day autoregressive lag windows (t-1, t-2, t-3)',
-      '3-day and 7-day rolling mean & standard deviation statistics',
-      'SCS-CN Curve Number (CN=88) impervious retention calculations',
-    ],
-    why: 'Monsoon storms exhibit strong temporal persistence. Rolling antecedent rainfall tracks soil saturation and runoff acceleration.',
-    improved: [
-      { label: 'Baseline MAE', from: '8.9 mm', to: '5.4 mm', delta: '-39.3%' },
-      { label: 'Runoff Accuracy', from: 'Unmodeled', to: 'SCS-CN Empirical', delta: 'Physics-Gated' },
-    ],
-  },
-  {
-    version: 'v0.1.0',
-    date: '2026-07-20',
-    tag: '75-Yr ERA5 Satellite Ingestion',
-    tagColor: C.dim,
-    added: [
-      'Automated Google Earth Engine extraction for ECMWF ERA5-Land Daily Aggregates',
-      'Ingestion of 75 continuous years of meteorological reanalysis (1950–2025)',
-      'USGS SRTM 30m Digital Elevation Model (DEM) topographical alignment',
-    ],
-    why: 'As demonstrated by the NIT Warangal hydrological research, sparse point rain gauges suffer from severe spatial uncertainty. Continuous 75-year gridded satellite data provides the necessary foundation for deep learning.',
-    improved: [
-      { label: 'Historical Record', from: '4 Yrs Gauge Data', to: '75 Yrs Gridded Satellite', delta: '+1875%' },
-      { label: 'Input Uncertainty', from: 'High (Sparse Gauges)', to: 'Low (Uniform Grids)', delta: 'Validated' },
-    ],
-  },
-]
-
-
 export default function ProgressPage() {
-  return (
-    <div style={{ background: C.bg, color: C.text, minHeight: '100vh', padding: '64px 24px', fontFamily: "'Inter', sans-serif" }}>
-      {/* Grid bg */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-        backgroundImage: `linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px)`,
-        backgroundSize: '40px 40px',
-      }} />
+  const [filter, setFilter] = useState<FilterType>('all');
 
-      <div style={{ maxWidth: 900, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+  const commitLogs: CommitLogItem[] = [
+    {
+      version: "v0.6",
+      isCurrentBest: true,
+      category: "architecture",
+      title: "Spatio-Temporal Residual U-Net + 2-Layer LSTM (75-Year ERA5 Pipeline)",
+      date: "2026-08-23",
+      commitHash: "6dffe54",
+      whatChanged: "Fused 64x64 spatial NetCDF atmospheric grids with 7-day 9-parameter temporal LSTM sequences and 85-ward SCS-CN hydrological routing.",
+      why: "Single tabular models missed synoptic-scale moisture advection and terrain bowl stagnation.",
+      method: "PyTorch UNet_LSTM_Bias with 256-d spatial embedding + 128-d temporal hidden states + ReLU gated calibration head.",
+      metricBeforeAfter: [
+        { metric: "RMSE (Test)", before: "8.4 mm", after: "6.2 mm", improved: true },
+        { metric: "Pearson r", before: "0.668", after: "0.760", improved: true },
+        { metric: "CSI Index", before: "0.533", after: "0.615", improved: true },
+        { metric: "CMIP6 Climate Match", before: "18.5%", after: "22.4%", improved: true }
+      ],
+      whatWeLearned: "Spatial context prevents false cloudburst alarms on days with dry upper-atmosphere profiles."
+    },
+    {
+      version: "v0.5",
+      isCurrentBest: false,
+      category: "architecture",
+      title: "3-Stage Gated Extreme Hybrid Pipeline",
+      date: "2026-08-15",
+      commitHash: "c918804",
+      whatChanged: "Decoupled dry-day filtering from moderate rain and extreme (>30mm) precipitation modeling.",
+      why: "Standard regression models over-predict light drizzle on overcast days and under-predict cloudbursts.",
+      method: "LightGBM Stage 1 (P >= 0.35) -> XGBoost Stage 2 Extreme Classifier -> Asymmetric Heavy Rain Regressor.",
+      metricBeforeAfter: [
+        { metric: "False Alarm Rate", before: "45.0%", after: "28.6%", improved: true },
+        { metric: "Extreme Detection POD", before: "65.0%", after: "100.0%", improved: true }
+      ],
+      whatWeLearned: "Extreme rainfall behaves as a distinct physical regime that requires dedicated loss penalties."
+    },
+    {
+      version: "v0.4",
+      category: "data",
+      title: "Spatial U-Net NetCDF Feature Extraction & LULC Infiltration",
+      date: "2026-08-01",
+      commitHash: "8d44e12",
+      whatChanged: "Integrated 75 years of daily NetCDF grid data and 30m SRTM DEM slope parameters.",
+      why: "Point forecasts cannot account for upstream catchment runoff draining into low-lying urban wards.",
+      method: "DoubleConv U-Net encoder extracting 256-dimensional spatial context vectors.",
+      metricBeforeAfter: [
+        { metric: "Catchment Inundation MAE", before: "12.4 mm", after: "7.8 mm", improved: true },
+        { metric: "Spatial Correlation", before: "0.420", after: "0.668", improved: true }
+      ],
+      whatWeLearned: "Topographic Position Index (TPI) is the single highest predictor of localized waterlogging."
+    },
+    {
+      version: "v0.3",
+      category: "validation",
+      title: "Physics-Augmented Random Forest with Soil Strata Constraints",
+      date: "2026-07-20",
+      commitHash: "72f091a",
+      whatChanged: "Enforced physical soil saturation limits across 0-7cm, 7-28cm, and 28-100cm moisture bands.",
+      why: "Unconstrained trees predicted flash floods even on parched, high-capacity dry soils.",
+      method: "Boundary-constrained decision forest trained with SCS-CN Curve Number thresholds.",
+      metricBeforeAfter: [
+        { metric: "CSI Index", before: "0.380", after: "0.533", improved: true },
+        { metric: "False Alarm Rate", before: "62.0%", after: "46.7%", improved: true }
+      ],
+      whatWeLearned: "Antecedent Moisture Condition (AMC-III) dictates whether 50mm of rain causes severe flooding or zero runoff."
+    },
+    {
+      version: "v0.2",
+      category: "architecture",
+      title: "Moderated Asymmetric Loss Function Integration",
+      date: "2026-07-05",
+      commitHash: "b29f401",
+      whatChanged: "Replaced symmetric MSE loss with asymmetric under-prediction penalties.",
+      why: "MSE treats a 10mm under-prediction on a flood day equally to an over-prediction on a dry day.",
+      method: "Custom Loss: Loss = alpha * (y - y_hat)^2 for under-predictions, beta * (y - y_hat)^2 for over-predictions.",
+      metricBeforeAfter: [
+        { metric: "Heavy Rain Recall (POD)", before: "48.0%", after: "72.7%", improved: true },
+        { metric: "RMSE", before: "15.8 mm", after: "12.4 mm", improved: true }
+      ],
+      whatWeLearned: "Public safety in flood warning requires penalizing missed extreme events 4x more than false alarms."
+    },
+    {
+      version: "v0.1",
+      category: "data",
+      title: "Baseline ERA5 75-Year Reanalysis Tabular Pipeline",
+      date: "2026-06-18",
+      commitHash: "0a718c7",
+      whatChanged: "Compiled continuous 1950–2025 meteorological series for Indore across 9 primary parameters.",
+      why: "Established the ground truth baseline across 27,375 consecutive days of historical climate.",
+      method: "Standard Linear & Gradient Boosted Regression baseline models.",
+      metricBeforeAfter: [
+        { metric: "Baseline RMSE", before: "24.5 mm", after: "18.4 mm", improved: true }
+      ],
+      whatWeLearned: "Monsoon seasonality requires dedicated monthly stratification and lag feature engineering."
+    }
+  ];
+
+  const filteredLogs = filter === 'all' 
+    ? commitLogs 
+    : commitLogs.filter(log => log.category === filter);
+
+  return (
+    <div style={{ background: 'var(--bg)', color: 'var(--ink)', minHeight: 'calc(100vh - 64px)', padding: '40px 24px 80px' }}>
+      
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        
         {/* Header */}
-        <div style={{ marginBottom: 64 }}>
-          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.cyan, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 12 }}>RainCast AI</p>
-          <h1 style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 900, fontSize: 'clamp(32px, 5vw, 54px)', letterSpacing: '-0.03em', margin: '0 0 16px' }}>
-            Progress<span style={{ color: C.cyan }}> Log</span>
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--teal-light)', padding: '4px 12px', borderRadius: 16, marginBottom: 12 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--teal)', fontFamily: "'IBM Plex Mono', monospace" }}>
+              RESEARCH LOG & COMMIT TRAIL
+            </span>
+          </div>
+          <h1 style={{ fontSize: 32, fontWeight: 700, margin: '0 0 8px' }}>
+            "How we got here" — Inspectable Version History
           </h1>
-          <p style={{ fontSize: 15, color: C.muted, maxWidth: 520, lineHeight: 1.7, margin: 0 }}>
-            A transparent record of every model improvement, data pipeline upgrade, and infrastructure change — with the engineering rationale behind each decision.
+          <p style={{ fontSize: 15, color: 'var(--ink-muted)', margin: 0, lineHeight: 1.5 }}>
+            A reproducible paper trail of every architectural iteration, parameter modification, and ground-truth validation delta.
           </p>
         </div>
 
-        {/* Timeline */}
-        <div style={{ position: 'relative' }}>
-          {/* Vertical line */}
-          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 1, background: `linear-gradient(to bottom, ${C.cyan}40, ${C.cyan}10, transparent)` }} />
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 48, paddingLeft: 48 }}>
-            {changelog.map((entry, idx) => (
-              <div key={entry.version} style={{ position: 'relative' }}>
-                {/* Timeline dot */}
-                <div style={{
-                  position: 'absolute', left: -54, top: 20,
-                  width: 14, height: 14, borderRadius: '50%',
-                  background: entry.tagColor,
-                  boxShadow: `0 0 12px ${entry.tagColor}80`,
-                  border: `2px solid ${C.bg}`,
-                }}>
-                  {idx === 0 && (
-                    <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `1px solid ${entry.tagColor}60`, animation: 'ping 2s ease-out infinite' }} />
-                  )}
-                </div>
-
-                {/* Connector line */}
-                <div style={{ position: 'absolute', left: -47, top: 27, width: 38, height: 1, background: `linear-gradient(90deg, ${entry.tagColor}40, ${entry.tagColor}20)` }} />
-
-                {/* Card */}
-                <div style={{
-                  borderRadius: 16, overflow: 'hidden',
-                  background: C.panel,
-                  border: `1px solid ${C.border}`,
-                  transition: 'border-color 0.2s',
-                }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = `${entry.tagColor}40`)}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = C.border)}
-                >
-                  {/* Card header */}
-                  <div style={{ padding: '18px 24px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <span style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em' }}>{entry.version}</span>
-                      <span style={{
-                        padding: '3px 10px', borderRadius: 20,
-                        background: `${entry.tagColor}18`, border: `1px solid ${entry.tagColor}40`,
-                        fontSize: 11, color: entry.tagColor,
-                        fontFamily: "'JetBrains Mono', monospace",
-                      }}>{entry.tag}</span>
-                    </div>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.dim }}>{entry.date}</span>
-                  </div>
-
-                  {/* Three-column body */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
-                    {/* What was Added */}
-                    <div style={{ padding: '20px 24px', borderRight: `1px solid ${C.border}` }}>
-                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.cyan, letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 14px' }}>What was Added</p>
-                      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {entry.added.map((item, i) => (
-                          <li key={i} style={{ display: 'flex', gap: 8, fontSize: 12, color: C.muted, lineHeight: 1.55 }}>
-                            <span style={{ color: entry.tagColor, flexShrink: 0, marginTop: 2, fontSize: 10 }}>◆</span>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Why */}
-                    <div style={{ padding: '20px 24px', borderRight: `1px solid ${C.border}` }}>
-                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.amber, letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 14px' }}>Why</p>
-                      <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, margin: 0 }}>{entry.why}</p>
-                    </div>
-
-                    {/* What Improved */}
-                    <div style={{ padding: '20px 24px' }}>
-                      <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.green, letterSpacing: '0.15em', textTransform: 'uppercase', margin: '0 0 14px' }}>What Improved</p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {entry.improved.map((imp, i) => (
-                          <div key={i} style={{ padding: '8px 10px', borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
-                            <p style={{ fontSize: 10, color: C.muted, margin: '0 0 4px' }}>{imp.label}</p>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.dim }}>{imp.from} → {imp.to}</span>
-                              <span style={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: 12, color: C.green }}>{imp.delta}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Timeline end */}
-            <div style={{ position: 'relative', paddingBottom: 16 }}>
-              <div style={{ position: 'absolute', left: -54, top: 4, width: 14, height: 14, borderRadius: '50%', background: C.dim, border: `2px solid ${C.bg}` }} />
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.dim, margin: 0 }}>Project inception — v1.0.0 · Jan 2024</p>
-            </div>
-          </div>
+        {/* Filter Bar */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 36, flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: 'All Milestones' },
+            { id: 'architecture', label: 'Model Architecture' },
+            { id: 'data', label: 'Data & Features' },
+            { id: 'validation', label: 'Validation & Physics' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setFilter(tab.id as FilterType)}
+              style={{
+                background: filter === tab.id ? 'var(--teal)' : 'var(--surface)',
+                color: filter === tab.id ? '#FFFFFF' : 'var(--ink-muted)',
+                border: filter === tab.id ? '1px solid var(--teal)' : '1px solid var(--border)',
+                padding: '8px 16px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+
+        {/* Timeline Log Cards with Contour Connecting Lines */}
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
+          {/* Vertical Connecting Line */}
+          <div style={{
+            position: 'absolute',
+            left: 20,
+            top: 20,
+            bottom: 20,
+            width: 2,
+            background: 'var(--border)',
+            zIndex: 1
+          }} />
+
+          {filteredLogs.map((log) => {
+            return (
+              <div
+                key={log.version}
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  display: 'flex',
+                  gap: 20,
+                  alignItems: 'flex-start'
+                }}
+              >
+                {/* Milestone Dot / Isohyet Ring Marker */}
+                <div style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: '50%',
+                  background: log.isCurrentBest ? 'var(--teal)' : 'var(--surface)',
+                  border: log.isCurrentBest ? '3px solid var(--teal-light)' : '2px solid var(--border)',
+                  color: log.isCurrentBest ? '#FFFFFF' : 'var(--ink-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  boxShadow: log.isCurrentBest ? '0 0 0 4px rgba(14, 124, 134, 0.15)' : 'none'
+                }}>
+                  {log.version}
+                </div>
+
+                {/* Main Card */}
+                <div
+                  className="card-instrument"
+                  style={{
+                    flex: 1,
+                    padding: 24,
+                    border: log.isCurrentBest ? '2px solid var(--teal)' : '1px solid var(--border)',
+                    background: 'var(--surface)'
+                  }}
+                >
+                  {/* Card Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, color: 'var(--teal)' }}>
+                          {log.version}
+                        </span>
+                        {log.isCurrentBest && (
+                          <span style={{
+                            background: 'var(--teal)',
+                            color: '#FFFFFF',
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em'
+                          }}>
+                            ★ CURRENT BEST
+                          </span>
+                        )}
+                        <span style={{ fontSize: 11, background: 'var(--bg)', padding: '2px 8px', borderRadius: 4, color: 'var(--ink-muted)', textTransform: 'capitalize' }}>
+                          {log.category}
+                        </span>
+                      </div>
+
+                      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--ink)' }}>
+                        {log.title}
+                      </h3>
+                    </div>
+
+                    <div style={{ textAlign: 'right', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink-muted)' }}>
+                      <div>{log.date}</div>
+                      <div style={{ color: 'var(--teal)', fontSize: 11 }}>[{log.commitHash}]</div>
+                    </div>
+                  </div>
+
+                  {/* Schema Content: What Changed / Why / Method / What We Learned */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14, fontSize: 13, color: 'var(--ink)', marginBottom: 18 }}>
+                    <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8 }}>
+                      <strong style={{ color: 'var(--ink-muted)', fontSize: 11, textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>What Changed</strong>
+                      {log.whatChanged}
+                    </div>
+
+                    <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8 }}>
+                      <strong style={{ color: 'var(--ink-muted)', fontSize: 11, textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>Why</strong>
+                      {log.why}
+                    </div>
+
+                    <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8 }}>
+                      <strong style={{ color: 'var(--ink-muted)', fontSize: 11, textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>Method</strong>
+                      {log.method}
+                    </div>
+
+                    <div style={{ background: 'var(--bg)', padding: 12, borderRadius: 8 }}>
+                      <strong style={{ color: 'var(--ink-muted)', fontSize: 11, textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>What We Learned</strong>
+                      {log.whatWeLearned}
+                    </div>
+                  </div>
+
+                  {/* Metric Before -> After Deltas in Measurement Mono */}
+                  <div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
+                      Empirical Metric Delta
+                    </span>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {log.metricBeforeAfter.map((m, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            background: 'var(--bg)',
+                            border: '1px solid var(--border)',
+                            padding: '6px 12px',
+                            borderRadius: 6,
+                            fontSize: 12,
+                            fontFamily: "'IBM Plex Mono', monospace"
+                          }}
+                        >
+                          <span style={{ color: 'var(--ink-muted)' }}>{m.metric}: </span>
+                          <span style={{ color: 'var(--ink-dim)', textDecoration: 'line-through', marginRight: 4 }}>{m.before}</span>
+                          <span style={{ color: m.improved ? 'var(--risk-low)' : 'var(--ink)', fontWeight: 700 }}>
+                            → {m.after}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            )
+          })}
+
+        </div>
+
       </div>
 
-      <style>{`@keyframes ping { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }`}</style>
     </div>
   )
 }
