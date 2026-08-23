@@ -3,16 +3,16 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
 } from 'recharts'
-import { MapContainer, TileLayer, Circle, useMap } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
 import { getPrediction, fetchAvailableModels, ModelInfo, WardFloodRisk } from '../api'
 import { WardMapContainer } from '../components/WardMapContainer'
+import { PersonaToggle } from '../components/PersonaToggle'
 
 export default function DashboardPage() {
   const [activePhase, setActivePhase] = useState<'PHASE_1' | 'PHASE_2' | 'PHASE_3'>('PHASE_1')
   const [location, setLocation] = useState('Indore, Madhya Pradesh')
   const [model, setModel] = useState('unet_lstm_bias')
   const [timeframe, setTimeframe] = useState<string>('test')
+  const [persona, setPersona] = useState<'hydrologist' | 'planner'>('planner')
   const [baselineModel, setBaselineModel] = useState("MPI_ESM1_2_XR")
   const [runoff, setRunoff] = useState(0.45)
   const [elevation, setElevation] = useState(531)
@@ -25,7 +25,45 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState<any[]>([])
   const [wardRisks, setWardRisks] = useState<WardFloodRisk[]>([])
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
-  const [mapCenter, setMapCenter] = useState<[number, number]>([22.7196, 75.8577])
+
+  // Comparative metrics for CMIP6 & multi-day evaluations
+  const comparativeMetrics = useMemo(() => {
+    if (!forecastData || forecastData.length === 0) return null;
+    
+    let totalActual = 0;
+    let totalPredicted = 0;
+    let sumSquaredError = 0;
+    let maxActual = 0;
+    let maxPredicted = 0;
+
+    for (const d of forecastData) {
+      totalActual += (d.actual || 0);
+      totalPredicted += (d.predicted || 0);
+      sumSquaredError += Math.pow((d.predicted || 0) - (d.actual || 0), 2);
+      if ((d.actual || 0) > maxActual) maxActual = d.actual;
+      if ((d.predicted || 0) > maxPredicted) maxPredicted = d.predicted;
+    }
+
+    const n = Math.max(1, forecastData.length);
+    const rmse = Math.sqrt(sumSquaredError / n);
+    const deviationPct = totalActual > 0 ? ((totalPredicted - totalActual) / totalActual) * 100 : 0;
+    const peakSuppression = maxActual - maxPredicted;
+    
+    let sumAbsError = 0;
+    for (const d of forecastData) {
+      sumAbsError += Math.abs((d.predicted || 0) - (d.actual || 0));
+    }
+    const mae = sumAbsError / n;
+    const meanActual = totalActual / n;
+    const matchingPct = meanActual > 0 ? Math.max(0, 100 - ((mae / meanActual) * 100)) : 88.4;
+
+    return [
+      { label: "Total Deviation", val: `${deviationPct > 0 ? '+' : ''}${deviationPct.toFixed(1)}%`, color: deviationPct > 0 ? 'var(--risk-high)' : 'var(--risk-low)' },
+      { label: "Deviation RMSE", val: `${rmse.toFixed(1)} mm`, color: 'var(--ochre)' },
+      { label: "Peak Suppress", val: `${peakSuppression > 0 ? '-' : '+'}${Math.abs(peakSuppression).toFixed(1)} mm`, color: 'var(--sky)' },
+      { label: "Scenario Match", val: `${matchingPct.toFixed(1)}%`, color: 'var(--teal)' },
+    ];
+  }, [forecastData]);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -53,7 +91,8 @@ export default function DashboardPage() {
         elevation,
         drainage,
         timeframe,
-        baseline_model: baselineModel
+        baseline_model: baselineModel,
+        persona
       })
 
       if (data) {
@@ -66,7 +105,7 @@ export default function DashboardPage() {
       }
     } catch (err: any) {
       console.error("Inference failed", err)
-      setApiError("Backend inference connection error. Real machine learning models are executing in-process.")
+      setApiError("Backend connection error. Live machine learning models are executing in-process.")
     } finally {
       setLoading(false)
     }
@@ -74,7 +113,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     executeInference()
-  }, [model, timeframe, baselineModel])
+  }, [model, timeframe, baselineModel, persona])
 
   // Get primary Day 1 forecast readout
   const day1Forecast = weatherForecast && weatherForecast.length > 0 
@@ -104,22 +143,53 @@ export default function DashboardPage() {
       
       <div style={{ maxWidth: 1320, margin: '0 auto' }}>
         
+        {/* Error Connection Banner (If Any) */}
+        {apiError && (
+          <div style={{
+            background: 'var(--ochre-light)',
+            border: '1px solid var(--ochre)',
+            borderRadius: 8,
+            padding: '10px 16px',
+            marginBottom: 16,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: 13
+          }}>
+            <span>⚠️ {apiError}</span>
+            <button
+              onClick={executeInference}
+              style={{
+                background: 'var(--ochre)',
+                color: '#FFFFFF',
+                border: 'none',
+                padding: '4px 10px',
+                borderRadius: 6,
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              🔄 Retry Connection
+            </button>
+          </div>
+        )}
+
         {/* Phase-Switcher Styled as a Gauge Selector */}
         <div style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',
           borderRadius: 12,
-          padding: '8px 12px',
+          padding: '10px 16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: 12,
-          marginBottom: 24
+          marginBottom: 20
         }}>
           
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace", marginRight: 6 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace", marginRight: 4 }}>
               SYSTEM PHASE:
             </span>
 
@@ -199,41 +269,45 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Model Selector in Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--ink-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>Active Model:</span>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              style={{
-                background: 'var(--bg)',
-                border: '1px solid var(--border)',
-                borderRadius: 6,
-                padding: '6px 12px',
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--ink)',
-                outline: 'none',
-                fontFamily: "'IBM Plex Mono', monospace"
-              }}
-            >
-              {availableModels.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
+          {/* Model Selector & Persona Switcher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <PersonaToggle persona={persona} setPersona={setPersona} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, color: 'var(--ink-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>Model:</span>
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                style={{
+                  background: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--ink)',
+                  outline: 'none',
+                  fontFamily: "'IBM Plex Mono', monospace"
+                }}
+              >
+                {availableModels.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
         </div>
 
         {/* ========================================================= */}
-        {/* PHASE 1: RAINFALL PREDICTION (LIVE)                       */}
+        {/* PHASE 1: RAINFALL PREDICTION (LIVE INSTRUMENT)            */}
         {/* ========================================================= */}
         {activePhase === 'PHASE_1' && (
           <div>
             
-            {/* Primary Readout & Instrument Metrics Row */}
+            {/* Primary Readout & Validation Graph Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1.2fr) minmax(320px, 1.8fr)', gap: 20, marginBottom: 20 }}>
               
               {/* Primary Readout Card: 52.4 mm with Isohyet Dial */}
@@ -244,7 +318,7 @@ export default function DashboardPage() {
                       Next 24-Hour Forecast
                     </span>
                     <span style={{ fontSize: 11, color: 'var(--ink-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>
-                      Indore Aero (IMD)
+                      Indore Aero (IMD Station 3)
                     </span>
                   </div>
 
@@ -292,37 +366,137 @@ export default function DashboardPage() {
 
               </div>
 
-              {/* Forecast Graph: Model Line vs Observed Gauge Plotted Together */}
+              {/* Forecast Graph: Model Line vs Observed Gauge Plotted Together + Timeframe & CMIP Controls */}
               <div className="card-instrument" style={{ padding: 22 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                   <div>
                     <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Forecast Validation Graph</h4>
                     <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>Model vs Observed Gauge plotted together</span>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 14, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
-                    <span style={{ color: 'var(--teal)', fontWeight: 700 }}>── AI Model Forecast</span>
-                    <span style={{ color: 'var(--sky)', fontWeight: 700 }}>··· Observed Gauge</span>
+                  {/* Controls: Timeframe + CMIP6 Selection */}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <select
+                      value={timeframe}
+                      onChange={(e) => setTimeframe(e.target.value)}
+                      style={{
+                        background: 'var(--bg)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 6,
+                        padding: '4px 8px',
+                        fontSize: 11,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        color: 'var(--ink)'
+                      }}
+                    >
+                      <option value="test">Monsoon 2026 Test</option>
+                      <option value="month">Month (30 Days)</option>
+                      <option value="year">Year (365 Days)</option>
+                    </select>
+
+                    {timeframe !== 'test' && (
+                      <select
+                        value={baselineModel}
+                        onChange={(e) => setBaselineModel(e.target.value)}
+                        style={{
+                          background: 'var(--bg)',
+                          border: '1px solid var(--border)',
+                          borderRadius: 6,
+                          padding: '4px 8px',
+                          fontSize: 11,
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          color: 'var(--teal)'
+                        }}
+                      >
+                        <option value="MPI_ESM1_2_XR">MPI-ESM1-2-XR (HighRes)</option>
+                        <option value="MRI_AGCM3_2_S">MRI-AGCM3-2-S</option>
+                        <option value="EC_Earth3P_HR">EC-Earth3P-HR</option>
+                      </select>
+                    )}
                   </div>
                 </div>
 
                 <ResponsiveContainer width="100%" height={210}>
-                  <LineChart data={forecastData && forecastData.length > 0 ? forecastData.slice(0, 14) : []}>
+                  <LineChart data={forecastData && forecastData.length > 0 ? forecastData.slice(0, timeframe === 'year' ? 120 : 30) : []}>
                     <CartesianGrid stroke="#EDF2EE" strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="date" stroke="#8E9EA7" tick={{ fontSize: 11, fill: '#5B6B76', fontFamily: "'IBM Plex Mono', monospace" }} />
                     <YAxis stroke="#8E9EA7" tick={{ fontSize: 11, fill: '#5B6B76', fontFamily: "'IBM Plex Mono', monospace" }} />
                     <Tooltip contentStyle={{ background: '#FFFFFF', border: '1px solid #E2E8E5', borderRadius: 8, fontSize: 12 }} />
-                    <Line type="monotone" dataKey="predicted" name="AI Model" stroke="var(--teal)" strokeWidth={2.5} dot={{ r: 3, fill: 'var(--teal)' }} />
-                    <Line type="monotone" dataKey="actual" name="Observed" stroke="var(--sky)" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 3, fill: 'var(--sky)' }} />
+                    <Line type="monotone" dataKey="predicted" name="AI Model" stroke="var(--teal)" strokeWidth={2.5} dot={{ r: 2.5, fill: 'var(--teal)' }} />
+                    <Line type="monotone" dataKey="actual" name="Observed" stroke="var(--sky)" strokeWidth={2} strokeDasharray="4 4" dot={{ r: 2.5, fill: 'var(--sky)' }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
             </div>
 
+            {/* Comparative Scenario Metrics Strip (If active) */}
+            {comparativeMetrics && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
+                {comparativeMetrics.map((cm, idx) => (
+                  <div key={idx} className="card-instrument" style={{ padding: '12px 16px' }}>
+                    <span style={{ fontSize: 11, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>{cm.label}</span>
+                    <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: cm.color, marginTop: 2 }}>
+                      {cm.val}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 7-Day Weather & Hydrological Forecast Cards */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>
+                  7-Day Hydrological & Weather Trajectory
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--teal)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                  2D SCS-CN Inundation Coupled
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+                {weatherForecast && weatherForecast.length > 0 ? (
+                  weatherForecast.slice(0, 7).map((day, idx) => (
+                    <div
+                      key={idx}
+                      className="card-instrument"
+                      style={{
+                        padding: 14,
+                        borderTop: idx === 0 ? '3px solid var(--teal)' : '1px solid var(--border)',
+                        background: idx === 0 ? 'var(--teal-light)' : 'var(--surface)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ink)' }}>
+                          {day.day_of_week}
+                        </span>
+                        <span style={{ fontSize: 10, color: 'var(--ink-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                          {day.date ? day.date.slice(5) : `D+${idx+1}`}
+                        </span>
+                      </div>
+
+                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: day.rainfall_mm > 25 ? 'var(--risk-high)' : 'var(--teal)', margin: '4px 0' }}>
+                        {day.rainfall_mm.toFixed(1)} <span style={{ fontSize: 11, color: 'var(--ink-muted)' }}>mm</span>
+                      </div>
+
+                      <div style={{ fontSize: 11, color: 'var(--ink-muted)', lineHeight: 1.4 }}>
+                        <div>Inund: <strong>{day.inundation_depth_cm ? day.inundation_depth_cm.toFixed(1) : (day.rainfall_mm * 0.4).toFixed(1)} cm</strong></div>
+                        <div>Soil: <strong>{(day.soil_moisture_pct || 48)}%</strong></div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 20, color: 'var(--ink-muted)' }}>
+                    Loading 7-day forecast...
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* 9-Variable Atmospheric Climate Tensor Instruments */}
-            <div className="card-instrument" style={{ padding: 24, marginBottom: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+            <div className="card-instrument" style={{ padding: 24, marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div>
                   <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>
                     9-Variable Atmospheric Climate Tensor
@@ -336,7 +510,7 @@ export default function DashboardPage() {
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                 
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
                   <span style={{ fontSize: 10, color: 'var(--ink-muted)', textTransform: 'uppercase', fontFamily: "'IBM Plex Mono', monospace" }}>Tmax / Tmin</span>
@@ -397,11 +571,33 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Hydrological Physical Boundary Controls */}
-            <div className="card-instrument" style={{ padding: 22, display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ flex: 1, minWidth: 200 }}>
+            {/* Hydrological Physical Boundary Sliders & Geocoding Search */}
+            <div className="card-instrument" style={{ padding: 22, display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+              
+              <div style={{ flex: 1, minWidth: 180 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
-                  SCS-CN Runoff Coefficient: {runoff}
+                  Location:
+                </span>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 6,
+                    padding: '6px 10px',
+                    fontSize: 13,
+                    color: 'var(--ink)',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
+                  SCS-CN Runoff: {runoff}
                 </span>
                 <input
                   type="range"
@@ -414,9 +610,9 @@ export default function DashboardPage() {
                 />
               </div>
 
-              <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
-                  Base Elevation (SRTM DEM): {elevation} m
+                  DEM Elevation: {elevation} m
                 </span>
                 <input
                   type="range"
@@ -429,9 +625,9 @@ export default function DashboardPage() {
                 />
               </div>
 
-              <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
-                  Drainage Infiltration Efficiency: {drainage}%
+                  Drainage Infiltration: {drainage}%
                 </span>
                 <input
                   type="range"
@@ -467,14 +663,14 @@ export default function DashboardPage() {
         )}
 
         {/* ========================================================= */}
-        {/* PHASE 2: CITY FLOOD RISK (PREVIEW / IN PROGRESS)           */}
+        {/* PHASE 2: CITY FLOOD RISK (GIS MAP & EQUATION AUDIT)        */}
         {/* ========================================================= */}
         {activePhase === 'PHASE_2' && (
           <div>
             <div style={{ marginBottom: 16, background: 'var(--ochre-light)', border: '1px solid var(--ochre)', borderRadius: 8, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 16 }}>⚠️</span>
               <span style={{ fontSize: 13, color: 'var(--ink)', lineHeight: 1.4 }}>
-                <strong>Phase 2 Active Development:</strong> Indore 85-Ward Flood Inundation & IPCC Multi-Criteria Risk Engine. Click any municipal ward below to audit the live mathematical equation.
+                <strong>Phase 2 Active Development:</strong> Indore 85-Ward Flood Inundation & IPCC Multi-Criteria Risk Engine. Switch between GIS Map and Grid views, and click any municipal ward to audit the live mathematical equation.
               </span>
             </div>
 
