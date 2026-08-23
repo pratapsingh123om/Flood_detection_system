@@ -165,9 +165,12 @@ export async function fetchAvailableModels(): Promise<ModelInfo[]> {
   }
 
   return [
-    { id: "unet_lstm_bias", name: "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Top CMIP Match: 22.4%)" },
-    { id: "unet_rf_bias", name: "2. Hybrid U-Net + XGBoost (Top Accuracy · r=0.760 · RMSE: 7.22mm)" },
-    { id: "randomforest_model", name: "3. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)" }
+    { id: "unet_lstm_bias", name: "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Cloud Run · Top CMIP Match: 22.4%)" },
+    { id: "unet_rf_bias", name: "2. Hybrid U-Net + XGBoost (GCP Cloud Run · Top Accuracy · r=0.760 · RMSE: 7.22mm)" },
+    { id: "randomforest_model", name: "3. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)" },
+    { id: "residual_unet_model", name: "4. Deep Spatial Residual U-Net (64×64 Atmospheric Grid Encoder)" },
+    { id: "lstm_baseline_model", name: "5. Temporal Deep LSTM Baseline (2-Layer Recurrent Multi-Step)" },
+    { id: "upgraded_extreme_hybrid_pipeline", name: "6. 3-Stage Gated Extreme Hybrid Pipeline (Heavy Rain Booster)" }
   ];
 }
 

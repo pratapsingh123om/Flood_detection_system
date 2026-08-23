@@ -75,6 +75,32 @@ def load_local_model(model_name: str):
             except Exception as e:
                 logging.error(f"Failed to load PyTorch hybrid model from {pt_file}: {e}")
 
+    elif model_name in ["residual_unet_model", "unet_encoder"]:
+        pt_file = os.path.join(adv_dir, "residual_unet_model.pt")
+        if os.path.exists(pt_file) and HAS_TORCH:
+            try:
+                from ml.advanced_hybrid.models import UNetEncoder
+                m = UNetEncoder(in_channels=1, out_features=256)
+                m.eval()
+                _LOADED_MODELS[model_name] = {"model": m, "type": "pytorch_unet"}
+                logging.info(f"Loaded PyTorch Spatial U-Net: {pt_file}")
+                return _LOADED_MODELS[model_name]
+            except Exception as e:
+                logging.error(f"Failed to load Spatial U-Net from {pt_file}: {e}")
+
+    elif model_name in ["lstm_baseline_model", "lstm_baseline"]:
+        pt_file = os.path.join(adv_dir, "lstm_baseline_model.pt")
+        if os.path.exists(pt_file) and HAS_TORCH:
+            try:
+                from ml.advanced_hybrid.models import LSTM
+                m = LSTM(input_dim=9, hidden_dim=128, num_layers=2)
+                m.eval()
+                _LOADED_MODELS[model_name] = {"model": m, "type": "pytorch_lstm"}
+                logging.info(f"Loaded PyTorch LSTM Baseline: {pt_file}")
+                return _LOADED_MODELS[model_name]
+            except Exception as e:
+                logging.error(f"Failed to load LSTM baseline from {pt_file}: {e}")
+
     # Map common aliases
     clean_name = model_name
     if clean_name in ["unet_rf_bias", "unet_xgboost_hybrid", "xgboost", "xgboost_model"]:

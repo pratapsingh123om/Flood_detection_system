@@ -16,20 +16,32 @@ api_router = APIRouter()
 @api_router.get("/models")
 def get_available_models():
     """
-    Returns the 3 Best Prediction & CMIP Matching Models from advanced_hybrid.
+    Returns the Advanced Hybrid and Physics ML Models from advanced_hybrid.
     """
     models = [
         {
             "id": "unet_lstm_bias",
-            "name": "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Top CMIP Match: 22.4%)"
+            "name": "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Cloud Run · Top CMIP Match: 22.4%)"
         },
         {
             "id": "unet_rf_bias",
-            "name": "2. Hybrid U-Net + XGBoost (Top Accuracy · r=0.760 · RMSE: 7.22mm)"
+            "name": "2. Hybrid U-Net + XGBoost (GCP Cloud Run · Top Accuracy · r=0.760 · RMSE: 7.22mm)"
         },
         {
             "id": "randomforest_model",
             "name": "3. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)"
+        },
+        {
+            "id": "residual_unet_model",
+            "name": "4. Deep Spatial Residual U-Net (64×64 Atmospheric Grid Encoder)"
+        },
+        {
+            "id": "lstm_baseline_model",
+            "name": "5. Temporal Deep LSTM Baseline (2-Layer Recurrent Multi-Step)"
+        },
+        {
+            "id": "upgraded_extreme_hybrid_pipeline",
+            "name": "6. 3-Stage Gated Extreme Hybrid Pipeline (Heavy Rain Booster)"
         }
     ]
     return {"models": models}
@@ -49,8 +61,14 @@ def get_prediction(request: PredictionRequest):
             chosen_model = "xgboost_model"
         elif chosen_model in ["randomforest", "randomforest_model"]:
             chosen_model = "randomforest_model"
+        elif chosen_model in ["residual_unet_model", "unet_encoder"]:
+            chosen_model = "residual_unet_model"
+        elif chosen_model in ["lstm_baseline_model", "lstm_baseline"]:
+            chosen_model = "lstm_baseline_model"
+        elif chosen_model in ["upgraded_extreme_hybrid_pipeline", "extreme_hybrid"]:
+            chosen_model = "upgraded_extreme_hybrid_pipeline"
         else:
-            chosen_model = "xgboost_model"
+            chosen_model = "unet_lstm_75years"
 
         forecast_7_days = predict_7_days(
             model_name=chosen_model,
