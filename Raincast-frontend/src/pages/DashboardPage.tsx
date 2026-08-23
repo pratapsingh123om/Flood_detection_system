@@ -150,8 +150,12 @@ export default function DashboardPage() {
     return () => clearTimeout(timeoutId)
   }, [location, model, timeframe, baselineModel, runoff, elevation, drainage, persona])
 
-  const currentRainValue = weatherForecast.length > 0 ? weatherForecast[0].rain : 52.4;
+  const currentRainValue = weatherForecast.length > 0 ? weatherForecast[0].rain : null;
   const currentTensor: ClimateAtmosphericTensor | undefined = weatherForecast[0]?.climate_tensor;
+  const liveAccuracy = metrics.find(m => m.label === 'Accuracy')?.val || (loading ? 'Evaluating...' : 'Dynamic');
+  const avgElevation = wardRisks.length > 0 ? Math.round(wardRisks.reduce((acc, w) => acc + w.elevation_m, 0) / wardRisks.length) : null;
+  const representativeSoil = wardRisks.length > 0 ? wardRisks[0].soil_moisture : undefined;
+  const representativeLulc = wardRisks.length > 0 ? wardRisks[0].lulc_category : undefined;
 
   return (
     <div style={{ background: C.bg, color: C.text, minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -225,7 +229,7 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: loading ? C.amber : C.green, display: 'inline-block' }} />
               <span style={{ fontSize: 11, color: C.muted, fontFamily: "'JetBrains Mono', monospace" }}>
-                {loading ? 'SYNCING' : 'MODEL CONNECTED'}
+                {loading ? 'CALCULATING' : 'MODEL CONNECTED'}
               </span>
             </div>
           </div>
@@ -255,10 +259,10 @@ export default function DashboardPage() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <span style={{ background: 'rgba(0,212,255,0.15)', color: C.cyan, padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
-                  Validated vs 2026 Ground Truth
+                  2026 Out-of-Sample Monsoon Sync
                 </span>
                 <span style={{ background: 'rgba(6,255,165,0.15)', color: C.green, padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>
-                  Confidence: 95.9%
+                  Model Accuracy: {liveAccuracy}
                 </span>
               </div>
             </div>
@@ -269,29 +273,41 @@ export default function DashboardPage() {
               {/* Rainfall Highlight Card */}
               <div style={{ background: C.panel, border: `1px solid ${C.borderBright}`, borderRadius: 14, padding: 20, textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <span style={{ fontSize: 11, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'JetBrains Mono', monospace" }}>
-                  Current / Day 1 Forecast
+                  Day 1 Forecast
                 </span>
-                <div style={{ fontSize: '48px', fontWeight: 900, fontFamily: "'Exo 2', sans-serif", color: C.cyan, margin: '8px 0' }}>
-                  {currentRainValue} <span style={{ fontSize: '20px', color: C.muted }}>mm</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, fontSize: 12 }}>
-                  <span style={{ color: currentRainValue > 30 ? C.red : C.green, fontWeight: 700 }}>
-                    {currentRainValue > 30 ? '⛈ Extreme Precipitation' : currentRainValue > 10 ? '🌧 Heavy Monsoon' : '🌤 Moderate Rain'}
-                  </span>
-                </div>
+                {loading ? (
+                  <div style={{ fontSize: '24px', color: C.muted, margin: '20px 0', fontFamily: "'JetBrains Mono', monospace" }}>
+                    Computing...
+                  </div>
+                ) : currentRainValue !== null ? (
+                  <>
+                    <div style={{ fontSize: '48px', fontWeight: 900, fontFamily: "'Exo 2', sans-serif", color: C.cyan, margin: '8px 0' }}>
+                      {currentRainValue} <span style={{ fontSize: '20px', color: C.muted }}>mm</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 8, fontSize: 12 }}>
+                      <span style={{ color: currentRainValue > 30 ? C.red : currentRainValue > 10 ? C.amber : C.green, fontWeight: 700 }}>
+                        {currentRainValue > 30 ? '⛈ Extreme Precipitation' : currentRainValue > 10 ? '🌧 Heavy Monsoon' : currentRainValue > 0.1 ? '🌦 Moderate Rain' : '🌤 Clear / No Rain'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: '18px', color: C.dim, margin: '20px 0' }}>
+                    Model Calculating...
+                  </div>
+                )}
               </div>
 
               {/* 7-Day Weather Strip */}
               <div style={{ background: C.panel, border: `1px solid ${C.border}`, borderRadius: 14, padding: 18 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: C.muted, fontFamily: "'JetBrains Mono', monospace" }}>7-DAY RAINFALL FORECAST TRAJECTORY</span>
-                  <span style={{ fontSize: 11, color: C.dim }}>Spatial U-Net + LSTM</span>
+                  <span style={{ fontSize: 11, color: C.dim }}>In-Process ML Pipeline</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
                   {weatherForecast.map(day => (
                     <div key={day.day || day.date} style={{
                       padding: '10px 4px', borderRadius: 10, textAlign: 'center',
-                      background: `rgba(0,212,255,${day.intensity * 0.12})`,
+                      background: `rgba(0,212,255,${Math.min(1.0, day.intensity * 0.12)})`,
                       border: `1px solid rgba(0,212,255,${0.1 + day.intensity * 0.2})`,
                     }}>
                       <p style={{ fontSize: 10, color: C.muted, margin: '0 0 4px', fontFamily: "'JetBrains Mono', monospace" }}>{day.day || day.date}</p>
@@ -349,7 +365,7 @@ export default function DashboardPage() {
                     🌐 9-Variable Atmospheric Climate Tensor
                   </h3>
                   <span style={{ fontSize: 11, color: C.muted }}>
-                    Physics predictors feeding the Spatio-Temporal Hybrid U-Net
+                    Physical state tensor feeding the active ML prediction pipeline
                   </span>
                 </div>
                 <span style={{ fontSize: 11, color: C.cyan, fontFamily: "'JetBrains Mono', monospace" }}>
@@ -361,70 +377,70 @@ export default function DashboardPage() {
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>1. Temperature (Tmax/Tmin)</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc', marginTop: 2 }}>
-                    {currentTensor?.tmax_degC || 29.8}°C / {currentTensor?.tmin_degC || 23.1}°C
+                    {currentTensor ? `${currentTensor.tmax_degC}°C / ${currentTensor.tmin_degC}°C` : (loading ? 'Loading...' : 'N/A')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>2. Dew-Point Temp</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.cyan, marginTop: 2 }}>
-                    {currentTensor?.dewpoint_degC || 22.4}°C
+                    {currentTensor ? `${currentTensor.dewpoint_degC}°C` : (loading ? 'Loading...' : 'N/A')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>3. Relative Humidity</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.green, marginTop: 2 }}>
-                    {currentTensor?.humidity_pct || 82}%
+                    {currentTensor ? `${currentTensor.humidity_pct}%` : (loading ? 'Loading...' : 'N/A')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>4 & 5. Solar & Thermal Radiation</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', marginTop: 2 }}>
-                    SW: {currentTensor?.sw_radiation_wm2 || 145} / LW: {currentTensor?.lw_radiation_wm2 || 380} W/m²
+                    {currentTensor ? `SW: ${currentTensor.sw_radiation_wm2} / LW: ${currentTensor.lw_radiation_wm2} W/m²` : (loading ? 'Loading...' : 'N/A')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 10, color: C.muted }}>6 & 7. Wind Magnitude √(U²+V²)</div>
+                  <div style={{ fontSize: 10, color: C.muted }}>6 & 7. Wind Speed & Vectors</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.amber, marginTop: 2 }}>
-                    {currentTensor?.wind_speed_ms || 4.2} m/s (U:{currentTensor?.wind_u_ms || 2.4}, V:{currentTensor?.wind_v_ms || 3.5})
+                    {currentTensor ? `${currentTensor.wind_speed_ms} m/s (U:${currentTensor.wind_u_ms}, V:${currentTensor.wind_v_ms})` : (loading ? 'Loading...' : 'N/A')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>8. Surface Pressure (SLP)</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.cyan, marginTop: 2 }}>
-                    {currentTensor?.surface_pressure_hpa || 941.8} hPa
+                    {currentTensor ? `${currentTensor.surface_pressure_hpa} hPa` : (loading ? 'Loading...' : 'N/A')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>9. Geopotential Height (500hPa)</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc', marginTop: 2 }}>
-                    {currentTensor?.geopotential_height_m || 5840} gpm
+                    {currentTensor ? `${currentTensor.geopotential_height_m} gpm` : (loading ? 'Loading...' : 'N/A')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>Soil Moisture Strata</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.green, marginTop: 2 }}>
-                    5m: 54% · 10m: 48% · 20m: 42%
+                    {representativeSoil ? `5m: ${representativeSoil.depth_5m_pct}% · 10m: ${representativeSoil.depth_10m_pct}% · 20m: ${representativeSoil.depth_20m_pct}%` : (loading ? 'Measuring...' : 'Dynamic')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 10, color: C.muted }}>LULC Decadal Epoch</div>
+                  <div style={{ fontSize: 10, color: C.muted }}>LULC Classification</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', marginTop: 2 }}>
-                    2020 Urban Baseline (2030 Proj.)
+                    {representativeLulc || (loading ? 'Analyzing...' : 'Urban Baseline')}
                   </div>
                 </div>
 
                 <div style={{ background: C.surface, padding: 10, borderRadius: 8, border: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 10, color: C.muted }}>Topography Resolution</div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan, marginTop: 2 }}>
-                    30m SRTM DEM (553m Avg)
+                    {avgElevation ? `30m SRTM DEM (${avgElevation}m Avg)` : '30m SRTM DEM'}
                   </div>
                 </div>
               </div>

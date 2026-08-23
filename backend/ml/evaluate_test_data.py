@@ -73,19 +73,22 @@ def evaluate_test_data(model_name: str) -> list:
         features_payload.append(row[feature_cols].to_dict())
         
     try:
-        res = requests.post(
-            f"{INFERENCE_URL}/predict/tabular",
-            json={"model_name": model_name, "features": features_payload},
-            timeout=15
-        )
-        if res.status_code != 200:
-            logging.error(f"Inference Service failed: {res.text}")
-            predicted_rainfalls = [0.0] * len(df_proc)
-        else:
-            predicted_rainfalls = res.json().get("predictions", [0.0] * len(df_proc))
+        from ml.local_inference import run_local_inference
+        predicted_rainfalls = run_local_inference(model_name, df_proc[feature_cols])
     except Exception as e:
-        logging.error(f"Failed to connect to Inference Service: {e}")
-        predicted_rainfalls = [0.0] * len(df_proc)
+        logging.warning(f"Local inference failed ({e}), falling back to remote service...")
+        try:
+            res = requests.post(
+                f"{INFERENCE_URL}/predict/tabular",
+                json={"model_name": model_name, "features": features_payload},
+                timeout=5
+            )
+            if res.status_code == 200:
+                predicted_rainfalls = res.json().get("predictions", [0.0] * len(df_proc))
+            else:
+                predicted_rainfalls = [0.0] * len(df_proc)
+        except Exception:
+            predicted_rainfalls = [0.0] * len(df_proc)
     
     results = []
     for i in range(len(df_proc)):

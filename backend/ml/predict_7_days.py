@@ -24,7 +24,19 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
     days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     predictions = []
     
-    # We will iterate through 7 days
+    if X_latest is not None and not X_latest.empty:
+        try:
+            from ml.local_inference import run_local_inference
+            # Run the actual ML model across all available rows
+            feature_cols = [c for c in X_latest.columns if c not in ['date', 'rainfall_mm', 'month', 'day']]
+            X_input = X_latest[feature_cols]
+            
+            raw_model_preds = run_local_inference(model_name, X_input)
+            logging.info(f"Successfully computed ML predictions: {raw_model_preds}")
+        except Exception as e:
+            logging.error(f"Local ML inference error ({e}), trying remote service...")
+            raw_model_preds = None
+
     for i in range(7):
         current_date = datetime.now() + timedelta(days=i)
         if dates is not None and i < len(dates):
@@ -38,32 +50,30 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
         predicted_tmin = 23.4 - (i * 0.2)
         is_fallback = False
         
-        if X_latest is not None and i < len(X_latest):
+        if raw_model_preds is not None and i < len(raw_model_preds):
+            predicted_rain = float(raw_model_preds[i])
+            if X_latest is not None and i < len(X_latest):
+                row = X_latest.iloc[[i]]
+                predicted_tmax = float(row['tmax_degC'].values[0]) if 'tmax_degC' in row else 30.2
+                predicted_tmin = float(row['tmin_degC'].values[0]) if 'tmin_degC' in row else 23.4
+        elif X_latest is not None and i < len(X_latest):
             try:
                 row = X_latest.iloc[[i]].copy()
-                
                 res = requests.post(
                     f"{INFERENCE_URL}/predict/tabular",
                     json={"model_name": model_name, "features": [row.iloc[0].to_dict()]},
-                    timeout=5
+                    timeout=3
                 )
                 if res.status_code == 200:
-                    predicted_rain = res.json().get("predictions", [0.0])[0]
+                    predicted_rain = float(res.json().get("predictions", [0.0])[0])
                 else:
-                    logging.error(f"Inference Service failed: {res.text}")
-                    predicted_rain = max(0.0, (runoff * 0.15) + (i * 1.8) - (drainage * 0.05))
+                    predicted_rain = 0.0
                     is_fallback = True
-                        
-                predicted_rain = max(0.0, float(predicted_rain))
-                predicted_tmax = float(row['tmax_degC'].values[0]) if 'tmax_degC' in row else 30.2
-                predicted_tmin = float(row['tmin_degC'].values[0]) if 'tmin_degC' in row else 23.4
-                
-            except Exception as e:
-                logging.warning(f"Prediction failed on day {i}: {str(e)}")
-                predicted_rain = max(0.0, (runoff * 0.15) + (i * 1.8) - (drainage * 0.05))
+            except Exception:
+                predicted_rain = 0.0
                 is_fallback = True
         else:
-            predicted_rain = max(0.0, (runoff * 0.15) + (i * 1.8) - (drainage * 0.05))
+            predicted_rain = 0.0
             is_fallback = True
 
         # Determine icon based on rain

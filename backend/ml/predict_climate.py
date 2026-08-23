@@ -103,29 +103,30 @@ def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year
     mask_def = (df_default['date'] >= pd.to_datetime(viz_start)) & (df_default['date'] <= pd.to_datetime(viz_end))
     df_default = df_default[mask_def].reset_index(drop=True)
     
-    INFERENCE_URL = os.getenv("INFERENCE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
-    
-    # We will send all features at once to the inference service to speed up
+    # We run local inference directly
     feature_cols = [c for c in df_proc.columns if c not in ['date', 'rainfall_mm']]
-    features_payload = []
-    for i in range(len(df_proc)):
-        row = df_proc.iloc[i]
-        features_payload.append(row[feature_cols].to_dict())
-        
     try:
-        res = requests.post(
-            f"{INFERENCE_URL}/predict/tabular",
-            json={"model_name": model_name, "features": features_payload},
-            timeout=15
-        )
-        if res.status_code != 200:
-            logging.error(f"Inference Service failed: {res.text}")
-            predicted_rainfalls = [0.0] * len(df_proc)
-        else:
-            predicted_rainfalls = res.json().get("predictions", [0.0] * len(df_proc))
+        from ml.local_inference import run_local_inference
+        predicted_rainfalls = run_local_inference(model_name, df_proc[feature_cols])
     except Exception as e:
-        logging.error(f"Failed to connect to Inference Service: {e}")
-        predicted_rainfalls = [0.0] * len(df_proc)
+        logging.warning(f"Local inference failed ({e}), falling back to remote service...")
+        features_payload = []
+        for i in range(len(df_proc)):
+            row = df_proc.iloc[i]
+            features_payload.append(row[feature_cols].to_dict())
+            
+        try:
+            res = requests.post(
+                f"{INFERENCE_URL}/predict/tabular",
+                json={"model_name": model_name, "features": features_payload},
+                timeout=5
+            )
+            if res.status_code == 200:
+                predicted_rainfalls = res.json().get("predictions", [0.0] * len(df_proc))
+            else:
+                predicted_rainfalls = [0.0] * len(df_proc)
+        except Exception:
+            predicted_rainfalls = [0.0] * len(df_proc)
         
     results = []
     
