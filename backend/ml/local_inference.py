@@ -5,6 +5,15 @@ import pandas as pd
 import joblib
 import logging
 
+try:
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    HAS_TORCH = True
+except ImportError:
+    HAS_TORCH = False
+    logging.warning("PyTorch is not available; PyTorch hybrid models will fall back gracefully.")
+
 # Ensure numpy compatibility for pickles generated across different numpy versions
 if hasattr(np, "core"):
     sys.modules['numpy._core'] = np.core
@@ -43,11 +52,14 @@ def load_local_model(model_name: str):
     # Check if advanced PyTorch hybrid is requested
     if model_name in ["unet_lstm_75years", "residual_unet_lstm_pipeline_75years", "unet_lstm_bias"]:
         pt_file = os.path.join(adv_dir, "residual_unet_lstm_pipeline_75years.pt")
-        if os.path.exists(pt_file):
+        if os.path.exists(pt_file) and HAS_TORCH:
             try:
-                import torch
                 from ml.advanced_hybrid.models import UNet_LSTM_Bias
-                p = torch.load(pt_file, map_location='cpu', weights_only=False)
+                try:
+                    p = torch.load(pt_file, map_location='cpu', weights_only=False)
+                except TypeError:
+                    p = torch.load(pt_file, map_location='cpu')
+                    
                 feat_cols = p.get('feature_cols', ['tmax_degC', 'tmin_degC', 'humidity_pct', 'radiation_wm2', 'wind_speed_ms', 'dewpoint_degC', 'surface_pressure_hpa', 'soil_moisture', 'evapotranspiration_mm'])
                 m = UNet_LSTM_Bias(nc_channels=1, csv_features=len(feat_cols), lstm_hidden=128, unet_features=256)
                 m.eval()
