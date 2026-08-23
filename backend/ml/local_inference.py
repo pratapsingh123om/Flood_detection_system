@@ -1,5 +1,11 @@
 import os
 import sys
+
+# Ensure backend root is on sys.path for direct script execution
+_backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 import numpy as np
 import pandas as pd
 import joblib
@@ -238,3 +244,59 @@ def run_local_inference(model_name: str, X: pd.DataFrame) -> np.ndarray:
         return np.maximum(0.0, np.round(raw_preds, 2))
         
     raise ValueError(f"Unsupported model object type: {type(model_obj)}")
+
+if __name__ == "__main__":
+    print("=" * 70)
+    print("TESTING LOCAL INFERENCE PIPELINE")
+    print(f"PyTorch Installed & Available: {HAS_TORCH}")
+    print("=" * 70)
+    
+    test_models = [
+        "unet_lstm_75years",
+        "xgboost_model",
+        "randomforest_model",
+        "upgraded_extreme_hybrid_pipeline",
+        "tuned_asym_hybrid"
+    ]
+    
+    # Try finding test dataset
+    csv_candidates = [
+        os.path.join(_backend_dir, "..", "Data", "data", "july_data", "indore-rainfall-data-test.csv"),
+        os.path.join(_backend_dir, "Data", "data", "july_data", "indore-rainfall-data-test.csv"),
+    ]
+    
+    sample_df = None
+    for p in csv_candidates:
+        if os.path.exists(p):
+            sample_df = pd.read_csv(p)
+            print(f"Loaded test dataset from: {os.path.abspath(p)} (Shape: {sample_df.shape})")
+            break
+            
+    if sample_df is None:
+        print("Creating synthetic meteorological sample batch for testing...")
+        sample_df = pd.DataFrame({
+            "tmax_degC": [32.5, 31.0, 29.8, 28.5, 30.2, 33.1, 31.4],
+            "tmin_degC": [24.1, 23.5, 22.8, 22.1, 23.0, 24.5, 23.8],
+            "humidity_pct": [78.0, 82.5, 88.0, 92.0, 85.0, 72.0, 79.0],
+            "radiation_wm2": [180.0, 160.0, 130.0, 110.0, 145.0, 210.0, 175.0],
+            "wind_speed_ms": [3.8, 4.2, 5.1, 6.2, 4.0, 3.2, 3.9],
+            "dewpoint_degC": [22.5, 22.8, 22.4, 21.9, 22.1, 22.0, 22.3],
+            "surface_pressure_hpa": [942.1, 940.8, 938.5, 937.2, 939.8, 943.0, 941.5],
+            "soil_moisture": [0.42, 0.45, 0.52, 0.58, 0.54, 0.40, 0.43],
+            "evapotranspiration_mm": [3.5, 3.1, 2.4, 1.8, 2.9, 4.1, 3.6]
+        })
+
+    for m_name in test_models:
+        try:
+            res = run_local_inference(m_name, sample_df)
+            print(f"\n[OK] Model '{m_name}':")
+            print(f"     -> Inferred Points: {len(res)}")
+            print(f"     -> Range: {float(np.min(res)):.2f} mm to {float(np.max(res)):.2f} mm")
+            print(f"     -> Predictions: {res[:5]}")
+        except Exception as e:
+            print(f"\n[FAIL] Model '{m_name}': Error = {e}")
+            
+    print("\n" + "=" * 70)
+    print("ALL TESTS COMPLETED!")
+    print("=" * 70)
+
