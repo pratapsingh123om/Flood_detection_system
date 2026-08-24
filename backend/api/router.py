@@ -24,7 +24,7 @@ def get_available_models():
     dynamic_models = []
     if os.path.exists(advanced_hybrid_dir):
         for f in os.listdir(advanced_hybrid_dir):
-            if f.endswith(".pth") or f.endswith(".pt"):
+            if f.endswith(".pth") or f.endswith(".pt") or f.endswith(".tflite"):
                 model_id = os.path.splitext(f)[0]
                 dynamic_models.append({
                     "id": model_id,
