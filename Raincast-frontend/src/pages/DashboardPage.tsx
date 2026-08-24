@@ -5,7 +5,6 @@ import {
 } from 'recharts'
 import { getPrediction, fetchAvailableModels, ModelInfo, WardFloodRisk, DEFAULT_MODELS } from '../api'
 import { WardMapContainer } from '../components/WardMapContainer'
-import { PersonaToggle } from '../components/PersonaToggle'
 import { getIndoreDefaultWards } from '../data/indoreWardsData'
 
 export default function DashboardPage() {
@@ -13,7 +12,6 @@ export default function DashboardPage() {
   const [location, setLocation] = useState('Indore, Madhya Pradesh')
   const [model, setModel] = useState('unet_lstm_bias')
   const [timeframe, setTimeframe] = useState<string>('test')
-  const [persona, setPersona] = useState<'hydrologist' | 'planner'>('planner')
   const [baselineModel, setBaselineModel] = useState("MPI_ESM1_2_XR")
   const [runoff, setRunoff] = useState(0.45)
   const [elevation, setElevation] = useState(531)
@@ -92,8 +90,7 @@ export default function DashboardPage() {
         elevation,
         drainage,
         timeframe,
-        baseline_model: baselineModel,
-        persona
+        baseline_model: baselineModel
       })
 
       if (data) {
@@ -114,7 +111,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     executeInference()
-  }, [model, timeframe, baselineModel, persona])
+  }, [model, timeframe, baselineModel])
 
   // Get primary Day 1 forecast readout
   const day1Forecast = weatherForecast && weatherForecast.length > 0 
@@ -273,10 +270,8 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Model Selector & Persona Switcher */}
+          {/* Model Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <PersonaToggle persona={persona} onToggle={setPersona} setPersona={setPersona} />
-
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: 'var(--ink-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>Model:</span>
               <select
@@ -375,7 +370,7 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                   <div>
                     <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Forecast Validation Graph</h4>
-                    <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>Model vs Observed Gauge plotted together</span>
+                    <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>Currently using CMIP as benchmark (Future: IMD Verification)</span>
                   </div>
 
                   {/* Controls: Timeframe + CMIP6 Selection */}

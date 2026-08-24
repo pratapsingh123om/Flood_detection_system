@@ -16,9 +16,22 @@ api_router = APIRouter()
 @api_router.get("/models")
 def get_available_models():
     """
-    Returns the Advanced Hybrid and Physics ML Models from advanced_hybrid.
+    Returns the Advanced Hybrid and Physics ML Models from advanced_hybrid dynamically.
     """
-    models = [
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    advanced_hybrid_dir = os.path.join(base_dir, "ml", "advanced_hybrid")
+    
+    dynamic_models = []
+    if os.path.exists(advanced_hybrid_dir):
+        for f in os.listdir(advanced_hybrid_dir):
+            if f.endswith(".pth") or f.endswith(".pt"):
+                model_id = os.path.splitext(f)[0]
+                dynamic_models.append({
+                    "id": model_id,
+                    "name": f"⭐ {model_id} (Advanced Hybrid)"
+                })
+                
+    models = dynamic_models + [
         {
             "id": "unet_lstm_bias",
             "name": "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Cloud Run · Top CMIP Match: 22.4%)"

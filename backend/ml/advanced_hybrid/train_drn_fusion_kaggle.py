@@ -1,15 +1,14 @@
 """
-FINAL SCRIPT: Deep Residual Network (DRN) with Covariate Fusion
-----------------------------------------------------------------
+FINAL SCRIPT: Deep Residual Network (DRN) with Covariate Fusion (KAGGLE VERSION)
+--------------------------------------------------------------------------------
 This script trains the DRN using both the 75-year ERA5 meteorological data 
 AND the high-resolution environmental covariates (DEM and NDVI).
 
-Instructions for Colab:
-1. Mount Google Drive.
-2. Ensure you have `xarray`, `netCDF4`, `torch`, and `rasterio` installed.
-   (!pip install rasterio)
-3. Ensure the ERA5 .nc files and the exported DEM/NDVI .tif files are in /BTP-COLAB.
-4. Run this script.
+Instructions for Kaggle:
+1. Ensure your dataset is attached to the notebook.
+2. In the right panel, under "Settings", turn on "GPU T4 x2" or "GPU P100".
+3. Add a cell at the top and run: `!pip install rasterio`
+4. Copy this entire script into the next cell and run it!
 """
 
 import os
@@ -24,11 +23,30 @@ from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 
 # ==========================================
-# CONFIGURATION
+# CONFIGURATION FOR KAGGLE
 # ==========================================
-ERA5_FOLDER = '/content/drive/MyDrive/BTP-COLAB/*.nc'
-DEM_PATH = '/content/drive/MyDrive/BTP-COLAB/indore_dem_30m.tif'
-NDVI_PATH = '/content/drive/MyDrive/BTP-COLAB/indore_ndvi_30m.tif'
+# Kaggle mounts datasets in the /kaggle/input/ directory.
+# Looking at your screenshot, Kaggle named the folder with UNDERSCORES: 'btp_collab_model'
+# Kaggle sometimes nests uploaded zip folders inside an extra subdirectory.
+# We use recursive globbing (**) to guarantee we find the files anywhere inside /kaggle/input/
+try:
+    ERA5_FOLDER = os.path.dirname(glob.glob('/kaggle/input/**/*.nc', recursive=True)[0]) + '/*.nc'
+    DEM_PATH = glob.glob('/kaggle/input/**/indore_dem_30m.tif', recursive=True)[0]
+except IndexError:
+    print("CRITICAL ERROR: Could not find the ERA5 .nc files or DEM .tif file in /kaggle/input/")
+    print("Please check that the dataset is attached and contains these files.")
+    raise
+
+# Check if NDVI exists dynamically or fallback gracefully
+try:
+    NDVI_PATH = glob.glob('/kaggle/input/**/indore_ndvi_30m.tif', recursive=True)[0]
+except IndexError:
+    print("WARNING: NDVI file not found in the dataset. Downgrading to 2-channel input (Rainfall + DEM).")
+    NDVI_PATH = None
+
+# Kaggle allows writing output files ONLY to the /kaggle/working/ directory
+CHECKPOINT_PATH = '/kaggle/working/drn_fused_checkpoint.pth'
+FINAL_MODEL_PATH = '/kaggle/working/drn_fused_model_final.pth'
 
 BATCH_SIZE = 2
 EPOCHS = 50
@@ -73,7 +91,7 @@ class ResidualBlock(nn.Module):
         return self.relu(out)
 
 class DRNDownscaler(nn.Module):
-    # in_channels = 3 (ERA5 Rainfall + DEM + NDVI)
+    # in_channels = 3 (ERA5 Rainfall + DEM + NDVI) or 2 if NDVI is missing
     def __init__(self, in_channels=3, out_channels=1, num_res_blocks=8):
         super(DRNDownscaler, self).__init__()
         self.conv_in = nn.Conv2d(in_channels, 64, kernel_size=3, padding=1)
@@ -108,55 +126,47 @@ class FusedFloodDataset(Dataset):
         precip_data = np.nan_to_num(precip_data, nan=0.0)
         
         print("Loading Static Covariates (DEM & NDVI)...")
-        # Load GeoTIFFs using rasterio
         with rasterio.open(dem_path) as src:
             dem_data = src.read(1)
-        with rasterio.open(ndvi_path) as src:
-            ndvi_data = src.read(1)
-            
-        # Normalize covariates
+        
+        # Normalize DEM
         dem_data = (dem_data - np.min(dem_data)) / (np.max(dem_data) - np.min(dem_data) + 1e-8)
-        ndvi_data = (ndvi_data - np.min(ndvi_data)) / (np.max(ndvi_data) - np.min(ndvi_data) + 1e-8)
-        
-        # Spatial alignment
-        # The ERA5 data is coarse, and DEM/NDVI are high-res. 
-        # For this network, we interpolate the coarse ERA5 to match the high-res target grid size of the DEM.
-        # Here we prepare the base shapes.
         self.target_shape = dem_data.shape
-        self.dem_tensor = torch.tensor(dem_data, dtype=torch.float32).unsqueeze(0) # (1, H, W)
-        self.ndvi_tensor = torch.tensor(ndvi_data, dtype=torch.float32).unsqueeze(0) # (1, H, W)
+        self.dem_tensor = torch.tensor(dem_data, dtype=torch.float32).unsqueeze(0)
         
+        # Handle NDVI if present
+        self.has_ndvi = ndvi_path is not None
+        if self.has_ndvi:
+            with rasterio.open(ndvi_path) as src:
+                ndvi_data = src.read(1)
+            ndvi_data = (ndvi_data - np.min(ndvi_data)) / (np.max(ndvi_data) - np.min(ndvi_data) + 1e-8)
+            self.ndvi_tensor = torch.tensor(ndvi_data, dtype=torch.float32).unsqueeze(0)
+            
         self.era5_data = precip_data
 
     def __len__(self):
         return len(self.era5_data) - 1
 
     def __getitem__(self, idx):
-        # 1. Get ERA5 input (t) and target (t+1)
-        # ERA5 shape is usually small, e.g., (6, 8)
         era5_input = self.era5_data[idx]
         era5_target = self.era5_data[idx + 1]
         
-        # Convert to tensors (unsqueeze to add channel and batch dims for interpolation)
         era5_in_t = torch.tensor(era5_input, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         era5_out_t = torch.tensor(era5_target, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
         
-        # 2. Interpolate coarse ERA5 to the high-res target grid
-        # Bilinear interpolation scales the 9km data to the 30m grid smoothly
         era5_in_highres = F.interpolate(era5_in_t, size=self.target_shape, mode='bilinear', align_corners=False).squeeze(0)
         era5_out_highres = F.interpolate(era5_out_t, size=self.target_shape, mode='bilinear', align_corners=False).squeeze(0)
         
-        # 3. Fuse the channels: [ERA5_Rainfall, DEM, NDVI]
-        # Shape becomes (3, H, W)
-        fused_input = torch.cat([era5_in_highres, self.dem_tensor, self.ndvi_tensor], dim=0)
+        if self.has_ndvi:
+            fused_input = torch.cat([era5_in_highres, self.dem_tensor, self.ndvi_tensor], dim=0)
+        else:
+            fused_input = torch.cat([era5_in_highres, self.dem_tensor], dim=0)
         
-        # 4. Extract a Random Spatial Patch to prevent GPU OOM
-        # 128x128 patch size is standard for deep downscaling on 15GB GPUs
+        # Extract a Random Spatial Patch to prevent GPU OOM
         PATCH_SIZE = 128
         h_max = self.target_shape[0] - PATCH_SIZE
         w_max = self.target_shape[1] - PATCH_SIZE
         
-        # Random start coordinates
         y_start = torch.randint(0, max(1, h_max), (1,)).item()
         x_start = torch.randint(0, max(1, w_max), (1,)).item()
         
@@ -174,7 +184,6 @@ def train_fused_model():
         dataset = FusedFloodDataset(ERA5_FOLDER, DEM_PATH, NDVI_PATH)
     except Exception as e:
         print(f"Error loading datasets: {e}")
-        print("Please ensure DEM and NDVI .tif files are downloaded from GEE and present in /BTP-COLAB.")
         return
         
     train_size = int(0.8 * len(dataset))
@@ -186,19 +195,18 @@ def train_fused_model():
     
     print(f"Training Samples: {train_size:,} | Validation Samples: {val_size:,}")
     
-    # 3 Input Channels (ERA5, DEM, NDVI)
-    model = DRNDownscaler(in_channels=3, out_channels=1).to(DEVICE)
+    in_channels = 3 if NDVI_PATH else 2
+    model = DRNDownscaler(in_channels=in_channels, out_channels=1).to(DEVICE)
     criterion = AsymmetricLoss(extreme_threshold=50.0, underestimation_penalty=10.0)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     
     print("\nStarting Training on", DEVICE, "...")
     
     # --- CHECKPOINT LOADING ---
-    checkpoint_path = '/content/drive/MyDrive/BTP-COLAB/drn_fused_checkpoint.pth'
     start_epoch = 0
-    if os.path.exists(checkpoint_path):
-        print(f"Found existing checkpoint at {checkpoint_path}. Resuming training...")
-        checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+    if os.path.exists(CHECKPOINT_PATH):
+        print(f"Found existing checkpoint at {CHECKPOINT_PATH}. Resuming training...")
+        checkpoint = torch.load(CHECKPOINT_PATH, map_location=DEVICE)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch'] + 1
@@ -244,11 +252,11 @@ def train_fused_model():
             'optimizer_state_dict': optimizer.state_dict(),
             'train_loss': avg_train_loss,
             'val_loss': avg_val_loss,
-        }, checkpoint_path)
-        print(f"Checkpoint saved for Epoch {epoch+1}")
+        }, CHECKPOINT_PATH)
+        print(f"Checkpoint saved for Epoch {epoch+1} to {CHECKPOINT_PATH}")
 
-    torch.save(model.state_dict(), '/content/drive/MyDrive/BTP-COLAB/drn_fused_model_final.pth')
-    print("Training Complete! Multi-channel fused model saved to Google Drive.")
+    torch.save(model.state_dict(), FINAL_MODEL_PATH)
+    print(f"Training Complete! Final model saved to {FINAL_MODEL_PATH}. You can download it from the right panel under 'Output'.")
 
 if __name__ == "__main__":
     train_fused_model()
