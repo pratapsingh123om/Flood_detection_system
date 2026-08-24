@@ -117,28 +117,43 @@ def predict_cmip6_climate(model_name: str, location: str, timeframe: str = "year
     
     # We run local inference directly
     feature_cols = [c for c in df_proc.columns if c not in ['date', 'rainfall_mm']]
-    try:
-        from ml.local_inference import run_local_inference
-        predicted_rainfalls = run_local_inference(model_name, df_proc[feature_cols])
-    except Exception as e:
-        logging.warning(f"Local inference failed ({e}), falling back to remote service...")
-        features_payload = []
-        for i in range(len(df_proc)):
-            row = df_proc.iloc[i]
-            features_payload.append(row[feature_cols].to_dict())
-            
+    
+    if model_name == "unet_model_compressed":
+        predicted_rainfalls = []
         try:
-            res = requests.post(
-                f"{INFERENCE_URL}/predict/tabular",
-                json={"model_name": model_name, "features": features_payload},
-                timeout=5
-            )
+            res = requests.post(f"{INFERENCE_URL}/predict_unet", json={"location": location}, timeout=10)
             if res.status_code == 200:
-                predicted_rainfalls = res.json().get("predictions", [0.0] * len(df_proc))
+                gc_preds = [float(f["predicted_rain"]) for f in res.json().get("forecast", [])]
             else:
-                predicted_rainfalls = [0.0] * len(df_proc)
+                gc_preds = [0.0] * 7
         except Exception:
-            predicted_rainfalls = [0.0] * len(df_proc)
+            gc_preds = [0.0] * 7
+            
+        for i in range(len(df_proc)):
+            predicted_rainfalls.append(gc_preds[i % len(gc_preds)] if len(gc_preds) > 0 else 0.0)
+    else:
+        try:
+            from ml.local_inference import run_local_inference
+            predicted_rainfalls = run_local_inference(model_name, df_proc[feature_cols])
+        except Exception as e:
+            logging.warning(f"Local inference failed ({e}), falling back to remote service...")
+            features_payload = []
+            for i in range(len(df_proc)):
+                row = df_proc.iloc[i]
+                features_payload.append(row[feature_cols].to_dict())
+                
+            try:
+                res = requests.post(
+                    f"{INFERENCE_URL}/predict/tabular",
+                    json={"model_name": model_name, "features": features_payload},
+                    timeout=5
+                )
+                if res.status_code == 200:
+                    predicted_rainfalls = res.json().get("predictions", [0.0] * len(df_proc))
+                else:
+                    predicted_rainfalls = [0.0] * len(df_proc)
+            except Exception:
+                predicted_rainfalls = [0.0] * len(df_proc)
         
     results = []
     

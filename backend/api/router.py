@@ -31,6 +31,12 @@ def get_available_models():
                     "name": f"⭐ {model_id} (Advanced Hybrid)"
                 })
                 
+    # Explicitly add the Google Cloud TFLite U-Net Model
+    dynamic_models.append({
+        "id": "unet_model_compressed",
+        "name": "⭐ U-Net Spatial TFLite (Google Cloud Run)"
+    })
+                
     models = dynamic_models + [
         {
             "id": "unet_lstm_bias",
@@ -80,8 +86,7 @@ def get_prediction(request: PredictionRequest):
             chosen_model = "lstm_baseline_model"
         elif chosen_model in ["upgraded_extreme_hybrid_pipeline", "extreme_hybrid"]:
             chosen_model = "upgraded_extreme_hybrid_pipeline"
-        else:
-            chosen_model = "unet_lstm_75years"
+        # Removed the fallback 'else' so 'unet_model_compressed' passes through unmodified.
 
         forecast_7_days = predict_7_days(
             model_name=chosen_model,

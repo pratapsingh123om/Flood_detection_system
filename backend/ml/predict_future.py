@@ -38,6 +38,8 @@ def predict_next_30_days(model_name: str, location: str, days: int = 30, start_d
     if start_date_str:
         current_sim_date = pd.to_datetime(start_date_str) - datetime.timedelta(days=1)
     
+    
+    cached_gc_unet = []
     # We will simulate `days` future days
     for i in range(days):
         last_row = df.iloc[-1].copy()
@@ -81,19 +83,32 @@ def predict_next_30_days(model_name: str, location: str, days: int = 30, start_d
         X_pred = proc_tail.iloc[[-1]][feature_cols]
         
         predicted_rain = 0.0
-        try:
-            res = requests.post(
-                f"{INFERENCE_URL}/predict/tabular",
-                json={"model_name": model_name, "features": [X_pred.iloc[0].to_dict()]},
-                timeout=5
-            )
-            if res.status_code == 200:
-                predicted_rain = res.json().get("predictions", [0.0])[0]
-            else:
-                logging.error(f"Inference Service failed: {res.text}")
-        except Exception as e:
-            logging.warning(f"Future prediction failed on {next_date}: {e}")
-            predicted_rain = 0.0
+        
+        if model_name == "unet_model_compressed":
+            if len(cached_gc_unet) == 0 or i % 7 == 0:
+                try:
+                    res = requests.post(f"{INFERENCE_URL}/predict_unet", json={"location": location}, timeout=10)
+                    if res.status_code == 200:
+                        cached_gc_unet = [float(f["predicted_rain"]) for f in res.json().get("forecast", [])]
+                    else:
+                        cached_gc_unet = [0.0] * 7
+                except Exception:
+                    cached_gc_unet = [0.0] * 7
+            predicted_rain = cached_gc_unet[i % len(cached_gc_unet)] if len(cached_gc_unet) > 0 else 0.0
+        else:
+            try:
+                res = requests.post(
+                    f"{INFERENCE_URL}/predict/tabular",
+                    json={"model_name": model_name, "features": [X_pred.iloc[0].to_dict()]},
+                    timeout=5
+                )
+                if res.status_code == 200:
+                    predicted_rain = res.json().get("predictions", [0.0])[0]
+                else:
+                    logging.error(f"Inference Service failed: {res.text}")
+            except Exception as e:
+                logging.warning(f"Future prediction failed on {next_date}: {e}")
+                predicted_rain = 0.0
             
         # Update the dataframe with the actual predicted rainfall so the next loop uses it as lag_1
         df.at[df.index[-1], 'rainfall_mm'] = predicted_rain

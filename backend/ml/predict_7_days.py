@@ -25,17 +25,34 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
     predictions = []
     
     if X_latest is not None and not X_latest.empty:
-        try:
-            from ml.local_inference import run_local_inference
-            # Run the actual ML model across all available rows
-            feature_cols = [c for c in X_latest.columns if c not in ['date', 'rainfall_mm', 'month', 'day']]
-            X_input = X_latest[feature_cols]
-            
-            raw_model_preds = run_local_inference(model_name, X_input)
-            logging.info(f"Successfully computed ML predictions: {raw_model_preds}")
-        except Exception as e:
-            logging.error(f"Local ML inference error ({e}), trying remote service...")
-            raw_model_preds = None
+        if model_name == "unet_model_compressed":
+            try:
+                res = requests.post(
+                    f"{INFERENCE_URL}/predict_unet",
+                    json={"location": location},
+                    timeout=10
+                )
+                if res.status_code == 200:
+                    forecast_data = res.json().get("forecast", [])
+                    raw_model_preds = [float(f["predicted_rain"]) for f in forecast_data]
+                    logging.info("Successfully fetched UNet predictions from Google Cloud.")
+                else:
+                    logging.error(f"GC UNet failed: {res.text}")
+                    raw_model_preds = None
+            except Exception as e:
+                logging.error(f"GC UNet request failed: {e}")
+                raw_model_preds = None
+        else:
+            try:
+                from ml.local_inference import run_local_inference
+                feature_cols = [c for c in X_latest.columns if c not in ['date', 'rainfall_mm', 'month', 'day']]
+                X_input = X_latest[feature_cols]
+                
+                raw_model_preds = run_local_inference(model_name, X_input)
+                logging.info(f"Successfully computed ML predictions: {raw_model_preds}")
+            except Exception as e:
+                logging.error(f"Local ML inference error ({e}), trying remote service...")
+                raw_model_preds = None
 
     for i in range(7):
         current_date = datetime.now() + timedelta(days=i)
