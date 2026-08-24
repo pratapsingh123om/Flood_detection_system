@@ -4,3 +4,4 @@ pydantic
 pandas
 numpy
 requests
+tflite-runtime

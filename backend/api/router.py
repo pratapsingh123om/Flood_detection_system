@@ -80,8 +80,7 @@ def get_prediction(request: PredictionRequest):
             chosen_model = "lstm_baseline_model"
         elif chosen_model in ["upgraded_extreme_hybrid_pipeline", "extreme_hybrid"]:
             chosen_model = "upgraded_extreme_hybrid_pipeline"
-        else:
-            chosen_model = "unet_lstm_75years"
+        # Removed the 'else' fallback so dynamic model names (like TFLite) pass through directly!
 
         forecast_7_days = predict_7_days(
             model_name=chosen_model,
