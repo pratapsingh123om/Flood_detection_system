@@ -55,6 +55,10 @@ def get_available_models():
         {
             "id": "upgraded_extreme_hybrid_pipeline",
             "name": "6. 3-Stage Gated Extreme Hybrid Pipeline (Heavy Rain Booster)"
+        },
+        {
+                    "id": "unet basis",
+                    "name": "7. UNET-basic_model"
         }
     ]
     return {"models": models}
