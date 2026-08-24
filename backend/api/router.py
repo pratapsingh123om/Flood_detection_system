@@ -24,7 +24,7 @@ def get_available_models():
     dynamic_models = []
     if os.path.exists(advanced_hybrid_dir):
         for f in os.listdir(advanced_hybrid_dir):
-            if f.endswith(".pth") or f.endswith(".pt") or f.endswith(".tflite"):
+            if f.endswith(".pth") or f.endswith(".pt"):
                 model_id = os.path.splitext(f)[0]
                 dynamic_models.append({
                     "id": model_id,
@@ -80,7 +80,8 @@ def get_prediction(request: PredictionRequest):
             chosen_model = "lstm_baseline_model"
         elif chosen_model in ["upgraded_extreme_hybrid_pipeline", "extreme_hybrid"]:
             chosen_model = "upgraded_extreme_hybrid_pipeline"
-        # Removed the 'else' fallback so dynamic model names (like TFLite) pass through directly!
+        else:
+            chosen_model = "unet_lstm_75years"
 
         forecast_7_days = predict_7_days(
             model_name=chosen_model,

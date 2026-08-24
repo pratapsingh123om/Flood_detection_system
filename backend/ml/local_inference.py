@@ -112,22 +112,6 @@ def load_local_model(model_name: str):
     elif clean_name in ["hybrid_pipeline", "extreme_hybrid", "upgraded_extreme_hybrid_pipeline", "unet_bias_model"]:
         clean_name = "upgraded_extreme_hybrid_pipeline"
         
-    # Check for TFLite models first
-    tflite_file = os.path.join(adv_dir, f"{clean_name}.tflite")
-    if os.path.exists(tflite_file):
-        try:
-            try:
-                import tflite_runtime.interpreter as tflite
-            except ImportError:
-                import tensorflow.lite as tflite
-            interpreter = tflite.Interpreter(model_path=tflite_file)
-            interpreter.allocate_tensors()
-            _LOADED_MODELS[model_name] = {"model": interpreter, "type": "tflite"}
-            logging.info(f"Loaded TFLite model: {tflite_file}")
-            return _LOADED_MODELS[model_name]
-        except Exception as e:
-            logging.error(f"Failed to load TFLite model from {tflite_file}: {e}")
-
     pkl_file = f"{clean_name}.pkl"
     file_path = os.path.join(models_dir, pkl_file)
     
@@ -261,43 +245,6 @@ def run_local_inference(model_name: str, X: pd.DataFrame) -> np.ndarray:
                 preds[rain_mask] = s3b.predict(X_rain)
                 
         return np.maximum(0.0, np.round(preds, 2))
-
-    # Handle TFLite
-    if isinstance(model_obj, dict) and model_obj.get("type") == "tflite":
-        interpreter = model_obj["model"]
-        input_details = interpreter.get_input_details()
-        output_details = interpreter.get_output_details()
-        
-        preds = []
-        X_vals = X.values.astype(np.float32)
-        expected_shape = input_details[0]['shape']
-        
-        for i in range(len(X_vals)):
-            in_tensor = np.expand_dims(X_vals[i], axis=0) # Base shape (1, N)
-            
-            # If the model expects a 4D image grid (e.g. [1, 1, 64, 64] or [1, 64, 64, C])
-            # but we're only providing tabular 1D features via this endpoint, we will mock it safely.
-            if len(expected_shape) > 2:
-                in_tensor = np.zeros(expected_shape, dtype=np.float32)
-                
-            # If it expects 2D (1, N) but N is larger or smaller, we clip or pad
-            elif len(expected_shape) == 2 and expected_shape[1] != in_tensor.shape[1]:
-                target_N = expected_shape[1]
-                if target_N > in_tensor.shape[1]:
-                    pad_width = ((0, 0), (0, target_N - in_tensor.shape[1]))
-                    in_tensor = np.pad(in_tensor, pad_width, mode='constant')
-                else:
-                    in_tensor = in_tensor[:, :target_N]
-            
-            try:
-                interpreter.set_tensor(input_details[0]['index'], in_tensor)
-                interpreter.invoke()
-                out = interpreter.get_tensor(output_details[0]['index'])
-                preds.append(max(0.0, float(np.sum(out)))) # arbitrary aggregation for dummy output
-            except Exception:
-                preds.append(0.0)
-                
-        return np.round(np.array(preds), 2)
 
     # Handle 2-stage classifier + regressor dictionary (e.g. tuned_asym_hybrid)
     if isinstance(model_obj, dict) and 'clf' in model_obj and 'reg' in model_obj:
