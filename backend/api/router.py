@@ -49,15 +49,11 @@ def get_available_models():
             "name": "4. Deep Spatial Residual U-Net (64×64 Atmospheric Grid Encoder)"
         },
         {
-            "id": "lstm_baseline_model",
-            "name": "5. Temporal Deep LSTM Baseline (2-Layer Recurrent Multi-Step)"
-        },
-        {
             "id": "upgraded_extreme_hybrid_pipeline",
             "name": "6. 3-Stage Gated Extreme Hybrid Pipeline (Heavy Rain Booster)"
         },
         {
-                    "id": "unet basis",
+                    "id": "unet_model_compressed",
                     "name": "7. UNET-basic_model"
         }
     ]
