@@ -186,15 +186,12 @@ export default function DashboardPage() {
           gap: 12,
           marginBottom: 20
         }}>
-          
-          
-
         </div>
 
         {/* ========================================================= */}
         {/* PHASE 1: RAINFALL PREDICTION (LIVE INSTRUMENT)            */}
         {/* ========================================================= */}
-        {activePhase === 'PHASE_1' && (
+        
           <div>
             
             {/* Primary Readout & Validation Graph Row */}
@@ -511,7 +508,6 @@ export default function DashboardPage() {
             </div>
 
           </div>
-        )}
 
 
         {/* ========================================================= */}
@@ -558,6 +554,7 @@ export default function DashboardPage() {
           </div>
         )}
 
+        </div>
       </div>
     </div>
   )
