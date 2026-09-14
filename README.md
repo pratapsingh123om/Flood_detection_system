@@ -594,27 +594,3 @@ The frontend can be deployed as a web application, with the API and scheduled mo
 
 Concrete installation commands, container files, deployment URLs, screenshots, license, and dependency versions should be added from the implemented repository. This README does not invent runnable entry points that are absent from the project.
 
-9. Next milestones
-
-Complete corrected downscaling evaluation and publish its limitations.
-
-Establish and evaluate a dedicated seven-day forecasting model.
-
-Implement the landing page, India dashboard, location search, and performance views.
-
-Connect the API to versioned forecast runs and audited metrics.
-
-Evaluate uncertainty estimates before displaying confidence ranges.
-
-Assess whether a 1-km product improves useful skill beyond grid refinement.
-
-Implement and separately validate flood-risk prediction.
-
-RainCast aims to make rainfall predictions usable, traceable, and measurable—from the source data to the selected point on the map. make it as we already complted on info about this on frontend just hardcode the fronend for final project untill i create the final model make sure no trace of this remain visible on frontend understood if not ask questions to clarify
-</USER_REQUEST>
-<ADDITIONAL_METADATA>
-The current local time is: 2026-09-14T18:38:20+05:30.
-</ADDITIONAL_METADATA>
-<USER_SETTINGS_CHANGE>
-The user changed setting `Model Selection` from Gemini 3.1 Pro (High) to GPT-OSS 120B (Medium). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
-</USER_SETTINGS_CHANGE>
