@@ -2,8 +2,8 @@ import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import LandingPage from './pages/LandingPage'
 import DashboardPage from './pages/DashboardPage'
-import ProgressPage from './pages/ProgressPage'
-import AboutPage from './pages/AboutPage'
+import PerformancePage from './pages/PerformancePage'
+import DataPage from './pages/DataPage'
 
 export default function App() {
   const location = useLocation()
@@ -45,10 +45,7 @@ export default function App() {
             </div>
             <div>
               <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
-                RainCast <span style={{ color: 'var(--teal)', fontWeight: 600 }}>AI</span>
-              </span>
-              <span style={{ display: 'block', fontSize: 10, color: 'var(--ink-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: -2 }}>
-                Indore Flood Instrument
+                RainCast <span style={{ color: 'var(--teal)', fontWeight: 600 }}>India</span>
               </span>
             </div>
           </NavLink>
@@ -69,11 +66,11 @@ export default function App() {
                 transition: 'all 0.15s ease',
               })}
             >
-              Home
+              Methodology
             </NavLink>
 
             <NavLink
-              to="/progress"
+              to="/performance"
               style={({ isActive }) => ({
                 textDecoration: 'none',
                 padding: '8px 14px',
@@ -85,11 +82,11 @@ export default function App() {
                 transition: 'all 0.15s ease',
               })}
             >
-              Progress Flow
+              Model Performance
             </NavLink>
 
             <NavLink
-              to="/about"
+              to="/data"
               style={({ isActive }) => ({
                 textDecoration: 'none',
                 padding: '8px 14px',
@@ -101,7 +98,7 @@ export default function App() {
                 transition: 'all 0.15s ease',
               })}
             >
-              About
+              About the Data
             </NavLink>
 
             <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 8px' }} />
@@ -135,8 +132,8 @@ export default function App() {
       <div style={{ paddingTop: 64 }}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/progress" element={<ProgressPage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="/performance" element={<PerformancePage />} />
+          <Route path="/data" element={<DataPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </div>
