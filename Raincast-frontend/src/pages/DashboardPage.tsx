@@ -18,7 +18,12 @@ L.Icon.Default.mergeOptions({
 function LocationMarker({ position, setPosition }: { position: L.LatLng | null, setPosition: (p: L.LatLng) => void }) {
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
+      // Approximate bounding box for India
+      if (e.latlng.lat >= 6.0 && e.latlng.lat <= 38.0 && e.latlng.lng >= 68.0 && e.latlng.lng <= 98.0) {
+        setPosition(e.latlng);
+      } else {
+        alert('Predictions are currently only available for locations within India.');
+      }
     },
   });
 
@@ -92,6 +97,12 @@ export default function DashboardPage() {
         <MapContainer 
           center={[22.5937, 78.9629]} 
           zoom={5} 
+          minZoom={4}
+          maxBounds={[
+            [4.0, 66.0], 
+            [39.0, 99.0] 
+          ]}
+          maxBoundsViscosity={1.0}
           style={{ height: '100%', width: '100%', zIndex: 0 }}
           zoomControl={false}
         >

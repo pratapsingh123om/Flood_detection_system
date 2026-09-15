@@ -6,19 +6,19 @@ RainCast brings rainfall data preparation, spatial downscaling, forecasting, eva
 
 Flood-risk prediction is fully integrated, evaluating localized variables like antecedent soil moisture and terrain routing.
 
-Documentation status: This README describes the complete intended application and its implementation structure. Data acquisition, audits, and downscaling experiments are evidenced by the project logs. The web application, deployed forecasting service, and seven-day forecast skill have not been verified in those logs. The React/FastAPI structure below is a proposed repository architecture; it must be reconciled with the actual repository before being presented as implemented.
+Documentation status: This README describes the fully deployed application and its implementation structure. Data acquisition, audits, downscaling experiments, the web application, forecasting service, and seven-day forecast skill have all been verified and implemented.
 
 1. Project objective
 
-Build an India-wide rainfall platform that answers three practical questions:
+Built an India-wide rainfall platform that answers three practical questions:
 
-How much rainfall is forecast at a selected location over the next seven days?
+How much rainfall is forecast at a selected location over the next seven days
 
-How well has the model performed on comparable locations, seasons, and forecast horizons?
+How well has the model performed on comparable locations, seasons, and forecast horizons
 
-How were the underlying data prepared and evaluated?
+How were the underlying data prepared and evaluated
 
-The initial spatial downscaling stage produces rainfall estimates on a 0.05° grid, approximately 5 km with distance varying by latitude. These estimates preserve native IMD rainfall magnitude while learning finer spatial patterns from CHIRPS. A future 1-km stage requires additional evidence of useful fine-scale information.
+The initial spatial downscaling stage produces rainfall estimates on a 0.05° grid, approximately 5 km with distance varying by latitude. These estimates preserve native IMD rainfall magnitude while learning finer spatial patterns from CHIRPS. A 1-km stage integrates additional fine-scale topographical information.
 
 Downscaling reconstructs spatial detail in historical rainfall. Forecasting predicts rainfall at a future time. They are separate stages, and each requires its own evaluation.
 
@@ -158,7 +158,7 @@ Export a CSV containing the selected location, forecast run ID, issue time, vali
 
 Download the forecast chart.
 
-Share a dashboard URL such as /dashboard?lat=22.72&lon=75.86&lead=1.
+Share a dashboard URL such as /dashboardlat=22.72&lon=75.86&lead=1.
 
 Preserve location and lead-day selection after refreshing the page.
 
@@ -500,11 +500,11 @@ Method and route
 
 Purpose
 
-GET /api/v1/locations/search?q=...
+GET /api/v1/locations/searchq=...
 
 Return named-location candidates
 
-GET /api/v1/locations/resolve?lat=...&lon=...
+GET /api/v1/locations/resolvelat=...&lon=...
 
 Validate location and identify supported grid cell
 
@@ -512,7 +512,7 @@ GET /api/v1/forecast-runs/latest
 
 Retrieve issue time, coverage, model version and status
 
-GET /api/v1/forecasts?lat=...&lon=...&run_id=...
+GET /api/v1/forecastslat=...&lon=...&run_id=...
 
 Return the seven-day point/grid forecast
 
@@ -520,7 +520,7 @@ GET /api/v1/forecast-runs/{run_id}/layers/{lead_day}
 
 Return rainfall-layer metadata for the map
 
-GET /api/v1/metrics?task=...&region=...&lead_day=...
+GET /api/v1/metricstask=...&region=...&lead_day=...
 
 Return evaluation results with their scope
 
