@@ -31,7 +31,11 @@ def get_available_models():
                     "name": f"⭐ {model_id} (Advanced Hybrid)"
                 })
                 
-    # Explicitly add the Google Cloud TFLite U-Net Model
+    # Explicitly add Cloud / Spatial Models
+    dynamic_models.append({
+        "id": "rainfall_only_spatial",
+        "name": "⭐ RainNet Spatial CNN (Rainfall-Only Central India GCP Bundle)"
+    })
     dynamic_models.append({
         "id": "unet_model_compressed",
         "name": "⭐ U-Net Spatial TFLite (Google Cloud Run)"

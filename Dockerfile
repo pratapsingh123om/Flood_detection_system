@@ -9,10 +9,11 @@ COPY backend/requirements.txt .
 RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
 RUN pip install --default-timeout=1000 --no-cache-dir -r requirements.txt
 
-# Copy the application, models, and data
+# Copy the application, models, data, and rainfall bundle
 COPY backend/ ./backend/
 COPY models/ ./models/
 COPY Data/ ./Data/
+COPY RainfallOnly_GCP_Bundle/ ./RainfallOnly_GCP_Bundle/
 
 # Set the working directory to backend where main.py is located
 WORKDIR /app/backend

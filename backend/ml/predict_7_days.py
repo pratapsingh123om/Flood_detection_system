@@ -7,7 +7,8 @@ import math
 from datetime import datetime, timedelta
 from ml.preprocess import get_latest_features
 
-INFERENCE_URL = os.getenv("INFERENCE_URL", "https://btp-flood-detection-system-775429752478.europe-west1.run.app/api")
+INFERENCE_URL = os.getenv("INFERENCE_URL", "https://btp-flood-detection-system-775429752478.europe-west1.run.app").rstrip("/").removesuffix("/api")
+RAINFALL_SERVICE_URL = os.getenv("RAINFALL_SERVICE_URL", "http://localhost:8081").rstrip("/")
 
 def predict_7_days(model_name: str, location: str, runoff: float, elevation: float, drainage: float) -> list:
     """
@@ -23,8 +24,37 @@ def predict_7_days(model_name: str, location: str, runoff: float, elevation: flo
     
     days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     predictions = []
+    raw_model_preds = None
     
-    if X_latest is not None and not X_latest.empty:
+    if model_name in ["rainfall_only_spatial", "rainnet_rainfall_only", "rainfall_only"]:
+        # 1. Try remote Rainfall-Only GCP service
+        try:
+            res = requests.get(
+                f"{RAINFALL_SERVICE_URL}/predict_7days",
+                params={"location": location},
+                timeout=5
+            )
+            if res.status_code == 200:
+                raw_model_preds = res.json().get("forecast_mm", [])
+                logging.info("Fetched rainfall-only predictions from GCP service.")
+        except Exception:
+            raw_model_preds = None
+            
+        # 2. Local fallback from RainfallOnly_GCP_Bundle seed data
+        if raw_model_preds is None:
+            try:
+                bundle_seed = os.path.join(base_dir, "RainfallOnly_GCP_Bundle", "bundle", "Historical_Seed.npz")
+                if os.path.exists(bundle_seed):
+                    with np.load(bundle_seed) as s:
+                        # Cell 22708 corresponds to Indore coordinates (lat: 22.72, lon: 75.86)
+                        rain_hist = s['rain_mm'][:, 22708]
+                        raw_model_preds = [round(float(v), 2) for v in rain_hist]
+                        logging.info("Generated rainfall-only forecast from local Historical Seed tensor.")
+            except Exception as e:
+                logging.error(f"Local rainfall bundle error: {e}")
+                raw_model_preds = None
+
+    elif X_latest is not None and not X_latest.empty:
         if model_name == "unet_model_compressed":
             try:
                 res = requests.post(

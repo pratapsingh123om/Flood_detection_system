@@ -8,11 +8,17 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - PORT=8080
       - INFERENCE_URL=http://inference_service:8000
+      - RAINFALL_SERVICE_URL=http://rainfall_service:8080
     depends_on:
       - inference_service
+      - rainfall_service
     volumes:
       - ./backend:/app/backend
+      - ./models:/app/models
+      - ./Data:/app/Data
+      - ./RainfallOnly_GCP_Bundle:/app/RainfallOnly_GCP_Bundle
 
   inference_service:
     build:
@@ -21,7 +27,22 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - PORT=8000
       - TABULAR_MODELS_DIR=/models/Models_new
     volumes:
       - ./inference_service:/app
       - ./models:/models
+
+  rainfall_service:
+    build:
+      context: ./RainfallOnly_GCP_Bundle
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+      - BUNDLE_DIR=/app/bundle
+      - CPU_THREADS=1
+    command: ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "120", "app:app"]
+    volumes:
+      - ./RainfallOnly_GCP_Bundle:/app

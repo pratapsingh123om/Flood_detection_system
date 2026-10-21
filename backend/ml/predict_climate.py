@@ -7,6 +7,8 @@ import math
 import os
 from ml.preprocess import preprocess_dataset
 
+INFERENCE_URL = os.getenv("INFERENCE_URL", "https://btp-flood-detection-system-775429752478.europe-west1.run.app").rstrip("/").removesuffix("/api")
+
 def fetch_cmip6_data(lat: float, lon: float, start_date: str, end_date: str, baseline_model: str = "MPI_ESM1_2_XR") -> pd.DataFrame:
     """
     Fetches SSP5-8.5 climate projection data from OpenMeteo Climate API.

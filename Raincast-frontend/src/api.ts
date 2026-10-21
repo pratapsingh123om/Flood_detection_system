@@ -142,6 +142,7 @@ export interface ModelInfo {
 }
 
 export const DEFAULT_MODELS: ModelInfo[] = [
+  { id: "rainfall_only_spatial", name: "⭐ RainNet Spatial CNN (Rainfall-Only Central India GCP Bundle)" },
   { id: "unet_lstm_bias", name: "1. Hybrid U-Net + LSTM (75-Year ERA5 Pipeline · Cloud Run · Top CMIP Match: 22.4%)" },
   { id: "unet_rf_bias", name: "2. Hybrid U-Net + XGBoost (GCP Cloud Run · Top Accuracy · r=0.760 · RMSE: 7.22mm)" },
   { id: "randomforest_model", name: "3. Physics Random Forest (Top CSI: 0.615 · POD: 72.7% · Low FAR: 20%)" },
@@ -152,6 +153,7 @@ export const DEFAULT_MODELS: ModelInfo[] = [
 
 const DEFAULT_ENDPOINTS = [
   import.meta.env.VITE_API_URL,
+  "https://raincast-backend-fqrk.onrender.com/api",
   "https://btp-flood-detection-system-775429752478.europe-west1.run.app/api",
   "http://localhost:8000/api",
   "http://127.0.0.1:8000/api"

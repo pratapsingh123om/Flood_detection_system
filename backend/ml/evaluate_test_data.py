@@ -5,7 +5,7 @@ import os
 import requests
 from ml.preprocess import preprocess_dataset
 
-INFERENCE_URL = os.getenv("INFERENCE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
+INFERENCE_URL = os.getenv("INFERENCE_URL", "https://btp-flood-detection-system-775429752478.europe-west1.run.app").rstrip("/").removesuffix("/api")
 
 def fetch_historical_2026(lat=22.7196, lon=75.8577, start_date="2026-06-01", end_date="2026-08-19"):
     # To keep dashboard fast, we will only fetch the critical monsoon months (June-August 2026)
@@ -74,8 +74,9 @@ def evaluate_test_data(model_name: str) -> list:
         
     if model_name == "unet_model_compressed":
         predicted_rainfalls = []
+        loc = "Indore"
         try:
-            res = requests.post(f"{INFERENCE_URL}/predict_unet", json={"location": location}, timeout=10)
+            res = requests.post(f"{INFERENCE_URL}/predict_unet", json={"location": loc}, timeout=10)
             if res.status_code == 200:
                 gc_preds = [float(f["predicted_rain"]) for f in res.json().get("forecast", [])]
             else:

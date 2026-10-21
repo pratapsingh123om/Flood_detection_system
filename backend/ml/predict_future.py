@@ -6,7 +6,7 @@ import logging
 import requests
 from ml.preprocess import preprocess_dataset
 
-INFERENCE_URL = os.getenv("INFERENCE_URL", "https://raincast-backend-ml-model-775429752478.asia-southeast1.run.app")
+INFERENCE_URL = os.getenv("INFERENCE_URL", "https://btp-flood-detection-system-775429752478.europe-west1.run.app").rstrip("/").removesuffix("/api")
 
 def predict_next_30_days(model_name: str, location: str, days: int = 30, start_date_str: str = None) -> list:
     """

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: raincast-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: singapore
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: INFERENCE_URL
+        value: https://btp-flood-detection-system-775429752478.europe-west1.run.app
+      - key: RAINFALL_SERVICE_URL
+        sync: false

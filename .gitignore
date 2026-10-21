@@ -11,4 +11,4 @@ venv/
 /models/
 *.keras
 *.tflite
-graphify-out/
+graphify-out/*.zip
