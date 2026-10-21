@@ -42,7 +42,7 @@ export default function PerformancePage() {
 
         <div style={{ marginTop: 40, padding: 20, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--teal)' }}>✓ Comprehensive Evaluation Complete</span>
-          <p style={{ fontSize: 14, color: 'var(--ink-muted)', margin: '8px 0 0' }}>Seven-day forecasting and multi-criteria flood-risk models have been rigorously backtested against historical baseline data across all major Indian river basins, achieving strong spatiotemporal correlation.</p>
+          <p style={{ fontSize: 14, color: 'var(--ink-muted)', margin: '8px 0 0' }}>Seven-day forecasting and multi-criteria flood-risk models have been rigorously backtested against historical baseline data across Central India river basins (Narmada, Betwa, Chambal, Shipra), achieving strong spatiotemporal correlation.</p>
         </div>
       </div>
     </div>

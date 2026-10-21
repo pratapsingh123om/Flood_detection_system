@@ -6,6 +6,13 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+@app.after_request
+def add_cors(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+
 BUNDLE_DIR = Path(os.environ.get('BUNDLE_DIR', Path(__file__).resolve().parent / 'bundle'))
 GEOMETRY_PATH = BUNDLE_DIR / 'Geometry.npz'
 SEED_PATH = BUNDLE_DIR / 'Historical_Seed.npz'

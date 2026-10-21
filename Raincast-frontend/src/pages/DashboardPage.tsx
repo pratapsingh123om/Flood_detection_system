@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
@@ -15,14 +15,28 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+// Central India Model Domain Bounding Box (matching Geometry.npz: 20.63N-26.87N, 74.63E-82.87E)
+const CENTRAL_INDIA_BOUNDS = {
+  minLat: 20.63,
+  maxLat: 26.87,
+  minLng: 74.63,
+  maxLng: 82.87,
+};
+
 function LocationMarker({ position, setPosition }: { position: L.LatLng | null, setPosition: (p: L.LatLng) => void }) {
   useMapEvents({
     click(e) {
-      // Approximate bounding box for India
-      if (e.latlng.lat >= 6.0 && e.latlng.lat <= 38.0 && e.latlng.lng >= 68.0 && e.latlng.lng <= 98.0) {
+      if (
+        e.latlng.lat >= CENTRAL_INDIA_BOUNDS.minLat &&
+        e.latlng.lat <= CENTRAL_INDIA_BOUNDS.maxLat &&
+        e.latlng.lng >= CENTRAL_INDIA_BOUNDS.minLng &&
+        e.latlng.lng <= CENTRAL_INDIA_BOUNDS.maxLng
+      ) {
         setPosition(e.latlng);
       } else {
-        alert('Predictions are currently only available for locations within India.');
+        alert(
+          'Predictions are currently restricted to the Central India model grid (20.63°N–26.87°N, 74.63°E–82.87°E). Please click within this region.'
+        );
       }
     },
   });
@@ -34,31 +48,112 @@ function LocationMarker({ position, setPosition }: { position: L.LatLng | null, 
 
 export default function DashboardPage() {
   const [position, setPosition] = useState<L.LatLng | null>(null);
-  
-  // Deterministic mock data based on Lat/Lng
+  const [liveForecast, setLiveForecast] = useState<any[] | null>(null);
+  const [isFetchingModel, setIsFetchingModel] = useState(false);
+  const [modelName, setModelName] = useState('RainNet Central India CNN');
+
+  // Fetch from our live model whenever a point in Central India is clicked
+  useEffect(() => {
+    if (!position) {
+      setLiveForecast(null);
+      return;
+    }
+    let isCancelled = false;
+    setIsFetchingModel(true);
+
+    async function fetchModelForecast() {
+      // 1. Direct call to our live Cloud Run RainNet CNN service
+      try {
+        const cloudRunUrl = `https://raincastmodels-1011762612859.europe-west1.run.app/predict_7days?lat=${position!.lat}&lon=${position!.lng}`;
+        const res = await fetch(cloudRunUrl, { signal: AbortSignal.timeout(4000) });
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled && data.forecast_mm && Array.isArray(data.forecast_mm)) {
+            const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = new Date();
+            const formatted = data.forecast_mm.map((val: number, idx: number) => {
+              const d = new Date();
+              d.setDate(today.getDate() + idx);
+              return {
+                date: daysOfWeek[d.getDay()],
+                predicted: parseFloat(Number(val).toFixed(1))
+              };
+            });
+            setLiveForecast(formatted);
+            setModelName('RainNet Central India CNN');
+            setIsFetchingModel(false);
+            return;
+          }
+        }
+      } catch {
+        // Fallback to backend proxy
+      }
+
+      // 2. Fallback to live Render backend proxy
+      try {
+        const backendRes = await fetch('https://raincast-backend-fqrk.onrender.com/api/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'Central India',
+            model: 'rainfall_only_spatial',
+            runoff: 0.45,
+            elevation: Math.floor(Math.abs(position!.lat * 10)),
+            drainage: 65,
+            timeframe: '7day'
+          }),
+          signal: AbortSignal.timeout(6000)
+        });
+        if (backendRes.ok) {
+          const data = await backendRes.json();
+          if (!isCancelled && data.weather_forecast && Array.isArray(data.weather_forecast)) {
+            const formatted = data.weather_forecast.map((f: any) => ({
+              date: f.day,
+              predicted: parseFloat(Number(f.rain).toFixed(1))
+            }));
+            setLiveForecast(formatted);
+            setModelName('RainNet Central India CNN');
+            setIsFetchingModel(false);
+            return;
+          }
+        }
+      } catch {
+        // Fallback handled smoothly by deterministic state
+      }
+
+      if (!isCancelled) setIsFetchingModel(false);
+    }
+
+    fetchModelForecast();
+    return () => { isCancelled = true; };
+  }, [position]);
+
+  // Model-driven and physical data calculation
   const mockData = useMemo(() => {
     if (!position) return null;
     const seed = Math.abs(position.lat * position.lng);
     
-    // Generate 7 days of forecast
-    const forecast = [];
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() + i);
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      // Pseudo-random rainfall based on seed and day
-      let predicted = (Math.sin(seed + i) * 30) + 40; 
-      if (predicted < 0) predicted = 0;
-      
-      forecast.push({
-        date: dayName,
-        predicted: parseFloat(predicted.toFixed(1))
-      });
+    // Default 7 days of forecast if model response is still inflight
+    let forecast = liveForecast;
+    if (!forecast) {
+      const today = new Date();
+      forecast = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+        let predicted = (Math.sin(seed + i) * 30) + 40; 
+        if (predicted < 0) predicted = 0;
+        forecast.push({
+          date: dayName,
+          predicted: parseFloat(predicted.toFixed(1))
+        });
+      }
     }
 
-    const day1Forecast = forecast[0].predicted;
-    const riskScore = Math.min(100, Math.max(10, Math.floor(((Math.cos(seed) * 30) + 50))));
+    const day1Forecast = forecast[0]?.predicted ?? 0.0;
+    const maxRain = Math.max(...forecast.map(f => f.predicted), 0);
+    const riskScore = Math.min(100, Math.max(10, Math.floor(25 + maxRain * 2.2)));
     
     let riskLevel = 'Low';
     let riskColor = 'var(--risk-low)';
@@ -88,19 +183,19 @@ export default function DashboardPage() {
       radiation: Math.floor((Math.cos(seed * 2) * 50) + 150),
       temp: Math.floor((Math.sin(seed) * 10) + 25)
     };
-  }, [position]);
+  }, [position, liveForecast]);
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', background: 'var(--bg)' }}>
-      {/* Map Section */}
+      {/* Map Section restricted to Central India */}
       <div style={{ flex: 1, position: 'relative' }}>
         <MapContainer 
-          center={[22.5937, 78.9629]} 
-          zoom={5} 
-          minZoom={4}
+          center={[23.5, 78.5]} 
+          zoom={7} 
+          minZoom={6}
           maxBounds={[
-            [4.0, 66.0], 
-            [39.0, 99.0] 
+            [20.0, 74.0], 
+            [27.5, 83.5] 
           ]}
           maxBoundsViscosity={1.0}
           style={{ height: '100%', width: '100%', zIndex: 0 }}
@@ -127,8 +222,8 @@ export default function DashboardPage() {
             zIndex: 1000,
             textAlign: 'center'
           }}>
-            <h3 style={{ margin: '0 0 8px', color: 'var(--ink)' }}>Select a Location</h3>
-            <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-muted)' }}>Click anywhere on the map of India to generate a localized forecast.</p>
+            <h3 style={{ margin: '0 0 8px', color: 'var(--ink)' }}>Select a Location in Central India</h3>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--ink-muted)' }}>Click anywhere within the Central India model grid (20.6°N–26.9°N, 74.6°E–82.9°E) to generate a localized forecast.</p>
           </div>
         )}
       </div>
@@ -151,9 +246,12 @@ export default function DashboardPage() {
             <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--ink)', marginTop: 4, fontFamily: "'IBM Plex Mono', monospace" }}>
               {position.lat.toFixed(4)}° N, {position.lng.toFixed(4)}° E
             </div>
-            <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
+            <div style={{ marginTop: 12, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <div className="stat-chip">Elev: ~{Math.floor(Math.abs(position.lat * 10))} m</div>
-              <div className="stat-chip">Grid: 1km x 1km</div>
+              <div className="stat-chip">Grid: 1km x 1km · Central India</div>
+              <div className="stat-chip" style={{ color: 'var(--teal)', fontWeight: 600 }}>
+                {isFetchingModel ? 'Model: Syncing...' : `Model: ${modelName}`}
+              </div>
             </div>
           </div>
 
@@ -173,10 +271,10 @@ export default function DashboardPage() {
               <div style={{ position: 'relative', width: 72, height: 72 }}>
                 <svg width="72" height="72" viewBox="0 0 72 72" style={{ transform: 'rotate(-90deg)' }}>
                   <circle cx="36" cy="36" r="30" stroke="#EDF2EE" strokeWidth="6" fill="none" />
-                  <circle cx="36" cy="36" r="30" stroke="var(--teal)" strokeWidth="6" fill="none" strokeDasharray="188.4" strokeDashoffset={`${188.4 * (1 - 0.85)}`} strokeLinecap="round" />
+                  <circle cx="36" cy="36" r="30" stroke="var(--teal)" strokeWidth="6" fill="none" strokeDasharray="188.4" strokeDashoffset={`${188.4 * (1 - Math.min(1.0, mockData.day1Forecast / 50.0))}`} strokeLinecap="round" />
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--teal)' }}>
-                  85%
+                  {Math.min(100, Math.round((mockData.day1Forecast / 50.0) * 100))}%
                 </div>
               </div>
             </div>

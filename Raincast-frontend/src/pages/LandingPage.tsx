@@ -58,7 +58,7 @@ export default function LandingPage() {
 
         <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 2, textAlign: 'center' }}>
           <h1 style={{ fontSize: 'clamp(36px, 5vw, 54px)', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.15, margin: '0 auto 18px', maxWidth: 820 }}>
-            Explore the next seven days of rainfall across <span style={{ color: 'var(--teal)' }}>India.</span>
+            Explore the next seven days of rainfall across <span style={{ color: 'var(--teal)' }}>Central India.</span>
           </h1>
 
           <p style={{ fontSize: '18px', color: 'var(--ink-muted)', lineHeight: 1.6, maxWidth: 680, margin: '0 auto 36px' }}>
@@ -118,7 +118,7 @@ export default function LandingPage() {
           </div>
           <div style={{ marginTop: 40, padding: 20, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)', display: 'inline-block' }}>
             <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--teal)' }}>✓ Integrated Flood-Risk Prediction</span>
-            <p style={{ fontSize: 14, color: 'var(--ink-muted)', margin: '8px 0 0' }}>Our system now fully integrates rainfall forecasts with antecedent soil moisture, terrain, and hydrological response to provide actionable flood-risk alerts across India.</p>
+            <p style={{ fontSize: 14, color: 'var(--ink-muted)', margin: '8px 0 0' }}>Our system now fully integrates rainfall forecasts with antecedent soil moisture, terrain, and hydrological response to provide actionable flood-risk alerts across Central India.</p>
           </div>
         </div>
       </section>

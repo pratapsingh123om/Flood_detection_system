@@ -45,7 +45,7 @@ export default function App() {
             </div>
             <div>
               <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 18, color: 'var(--ink)', letterSpacing: '-0.02em' }}>
-                RainCast <span style={{ color: 'var(--teal)', fontWeight: 600 }}>India</span>
+                RainCast <span style={{ color: 'var(--teal)', fontWeight: 600 }}>Central India</span>
               </span>
             </div>
           </NavLink>
