@@ -13,4 +13,4 @@ services:
       - key: INFERENCE_URL
         value: https://btp-flood-detection-system-775429752478.europe-west1.run.app
       - key: RAINFALL_SERVICE_URL
-        sync: false
+        value: https://raincastmodels-1011762612859.europe-west1.run.app

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from ml.preprocess import get_latest_features
 
 INFERENCE_URL = os.getenv("INFERENCE_URL", "https://btp-flood-detection-system-775429752478.europe-west1.run.app").rstrip("/").removesuffix("/api")
-RAINFALL_SERVICE_URL = os.getenv("RAINFALL_SERVICE_URL", "http://localhost:8081").rstrip("/")
+RAINFALL_SERVICE_URL = os.getenv("RAINFALL_SERVICE_URL", "https://raincastmodels-1011762612859.europe-west1.run.app").rstrip("/")
 
 def predict_7_days(model_name: str, location: str, runoff: float, elevation: float, drainage: float) -> list:
     """
