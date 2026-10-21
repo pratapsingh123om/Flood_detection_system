@@ -1,48 +1,60 @@
-# RainCast India
+# RainCast Central India
 
-Location-based rainfall intelligence for India: explore a location, view a seven-day rainfall forecast, and understand the evidence behind the prediction.
+Location-based rainfall intelligence for Central India: explore any coordinate, view a seven-day spatial rainfall forecast from our live RainNet CNN model, and evaluate IPCC-aligned flood risk.
 
-RainCast brings rainfall data preparation, spatial downscaling, forecasting, evaluation, and a map-based web experience into one project. Users can search by place name, enter latitude and longitude, or select a point on the India map to explore daily rainfall predictions. A dedicated metrics view explains how the model performs across forecast lead times, regions, and rainfall intensities.
+RainCast brings rainfall data preparation, spatial downscaling, autoregressive forecasting, hydrological flood assessment, and a modern map-based web experience into one integrated platform. The active operational model is strictly tailored to the **Central India spatial domain** (`20.63°N–26.87°N`, `74.63°E–82.87°E`, spanning 108,746 supported cells at 0.01° / ~1 km resolution), covering Madhya Pradesh and key river catchments (Narmada, Betwa, Chambal, Shipra, Kahn).
 
-Flood-risk prediction is fully integrated, evaluating localized variables like antecedent soil moisture and terrain routing.
+---
 
-Documentation status: This README describes the fully deployed application and its implementation structure. Data acquisition, audits, downscaling experiments, the web application, forecasting service, and seven-day forecast skill have all been verified and implemented.
+## 🚀 Live Cloud Architecture & Deployed Services
 
-1. Project objective
+| Service | Platform | Live URL / Endpoint | Role |
+| :--- | :--- | :--- | :--- |
+| **RainNet Spatial CNN** | Google Cloud Run | [`raincastmodels`](https://raincastmodels-1011762612859.europe-west1.run.app) | Dedicated PyTorch microservice serving 7-day downscaled recursive forecasts (`/health`, `/predict_7days`, `/metadata`). |
+| **Main API & Flood Engine** | Render (Docker) | [`raincast-backend`](https://raincast-backend-fqrk.onrender.com) | FastAPI backend serving IPCC Disaster Risk assessments, ward vulnerability indices, and CMIP6 climate downscaling. |
+| **Interactive Dashboard** | Vite + React + Leaflet | Frontend Application | Interactive map clamped to Central India coordinates, querying the live RainNet CNN model in real-time. |
+| **State & Run Storage** | Google Cloud Storage | `gs://$BUCKET` | Durable rolling seed states (`seeds/Historical_Seed.npz`) and atomic CAS pointer updates (`state/latest.json`). |
 
-Built an India-wide rainfall platform that answers three practical questions:
+---
 
-How much rainfall is forecast at a selected location over the next seven days
+## ⚡ Quickstart & Local Docker Stack
 
-How well has the model performed on comparable locations, seasons, and forecast horizons
+Run the entire 3-tier microservice architecture locally with a single command:
 
-How were the underlying data prepared and evaluated
+```bash
+docker compose up --build -d
+```
 
-The initial spatial downscaling stage produces rainfall estimates on a 0.05° grid, approximately 5 km with distance varying by latitude. These estimates preserve native IMD rainfall magnitude while learning finer spatial patterns from CHIRPS. A 1-km stage integrates additional fine-scale topographical information.
+* **FastAPI Backend**: `http://localhost:8080` (API docs at `/docs`)
+* **RainNet Spatial Microservice**: `http://localhost:8081` (Health check at `/health`)
+* **Inference Microservice**: `http://localhost:8000`
 
-Downscaling reconstructs spatial detail in historical rainfall. Forecasting predicts rainfall at a future time. They are separate stages, and each requires its own evaluation.
+Test all live endpoints:
+```bash
+python test_render.py https://raincast-backend-fqrk.onrender.com
+```
 
-2. Product experience
+---
 
-Main journey: methodology landing page → open dashboard → select location → inspect seven forecast days → explore validation metrics.
+## 1. Project Objective
 
-Page 1 — Landing page /
+Built a high-resolution rainfall forecasting platform for Central India that answers three practical questions:
 
-The landing page introduces RainCast and explains the methodology before directing visitors to the dashboard.
+1. **How much rainfall is forecast at a selected location over the next seven days?**  
+   Predicted via an autoregressive 3-layer spatial CNN (`RainfallOnly_RainNet_CNN`, 24 channels, 7-day rolling history) over 108,746 supported 1 km cells.
 
-Navigation and hero
+2. **What is the localized flood and waterlogging risk?**  
+   Evaluated using the IPCC Disaster Risk Framework (Hazard × Vulnerability × Exposure) weighted with AHP across 85 municipal wards and regional basins.
 
-RainCast India logo and links to Methodology, Dashboard, Model Performance, and About the Data.
+3. **How were the underlying models trained and audited?**  
+   Trained on 2006–2018 historical data, validated on 2019–2020, and tested out-of-sample on 2021–2024 with zero data leakage.
 
-Headline: “Explore the next seven days of rainfall across India.”
+---
 
-Supporting text: “Select a place or coordinates to explore rainfall estimates and the model evaluation behind them.”
+## 2. Product Experience
 
-Primary action: Open rainfall dashboard.
+Main user journey: **Methodology landing page → Open dashboard → Click Central India location → Live 7-day model forecast & flood risk → Inspect validation metrics.**
 
-Secondary action: Explore the methodology.
-
-An India-map illustration or preview provides geographic context. Any demonstration forecast is explicitly labeled as sample data.
 
 Methodology section, step by step
 
@@ -588,9 +600,60 @@ The corrected pipeline first generates test-year outputs. Full historical genera
 
 8. Implementation and deployment configuration
 
-Suggested configuration keys include DATABASE_URL, FORECAST_STORAGE_ROOT, MODEL_REGISTRY_PATH, CACHE_URL, GEOCODER_PROVIDER, ALLOWED_ORIGINS, and frontend VITE_API_BASE_URL. Secrets belong in server-side environment configuration.
+### Environment Variables
 
-The frontend can be deployed as a web application, with the API and scheduled model worker deployed separately. The worker needs suitable inference hardware; the API primarily performs spatial lookup and result retrieval.
+| Variable | Default / Example | Purpose |
+| :--- | :--- | :--- |
+| `RAINFALL_SERVICE_URL` | `https://raincastmodels-1011762612859.europe-west1.run.app` | URL of the live Cloud Run RainNet CNN spatial microservice. |
+| `INFERENCE_URL` | `https://btp-flood-detection-system-775429752478.europe-west1.run.app` | URL of the legacy/tabular inference microservice. |
+| `PORT` | `10000` (Render) / `8080` (Docker) | Port for the FastAPI server to bind to. |
+| `BUCKET` | `your-private-gcs-bucket` | Google Cloud Storage bucket for seed state persistence. |
+| `BUNDLE_DIR` | `/app/bundle` | Path to `Weights.pt`, `Geometry.npz`, and `Historical_Seed.npz`. |
 
-Concrete installation commands, container files, deployment URLs, screenshots, license, and dependency versions should be added from the implemented repository. This README does not invent runnable entry points that are absent from the project.
+### Cloud Run Deployment (RainNet CNN)
+
+Using Google Cloud Shell or Bash:
+```bash
+cd RainfallOnly_GCP_Bundle
+export PROJECT_ID="project-6254dcef-f346-450e-8e4"
+export BUCKET="your-gcs-bucket"
+export REGION="europe-west1"
+export ALLOW_UNAUTHENTICATED="true"
+bash deploy.sh
+```
+
+Using Windows PowerShell:
+```powershell
+cd RainfallOnly_GCP_Bundle
+.\deploy.ps1 -ProjectId "project-6254dcef-f346-450e-8e4" -Bucket "your-gcs-bucket" -Region "europe-west1" -AllowUnauthenticated
+```
+
+### Render Deployment (FastAPI Backend)
+
+Deploy via the included `render.yaml` Blueprint or connect the GitHub repository with the root `Dockerfile`:
+* **Runtime**: Docker (`Dockerfile`)
+* **Port**: `10000`
+* **Health Check**: `/`
+* **Env Vars**: Set `RAINFALL_SERVICE_URL=https://raincastmodels-1011762612859.europe-west1.run.app`
+
+### Local Multi-Container Stack (Docker Compose)
+
+```bash
+docker compose up --build -d
+```
+Spins up:
+* `backend` on `http://localhost:8080`
+* `rainfall_service` on `http://localhost:8081`
+* `inference_service` on `http://localhost:8000`
+
+### Automated Verification Script
+
+Verify that health checks, model discovery, and 7-day prediction runs are operating smoothly:
+```bash
+# Test live Render backend
+python test_render.py https://raincast-backend-fqrk.onrender.com
+
+# Or test local instance
+python test_render.py http://localhost:8080
+```
 
