@@ -47,7 +47,7 @@ Built a high-resolution rainfall forecasting platform for Central India that ans
    Evaluated using the IPCC Disaster Risk Framework (Hazard × Vulnerability × Exposure) weighted with AHP across 85 municipal wards and regional basins.
 
 3. **How were the underlying models trained and audited?**  
-   Trained on 2006–2018 historical data, validated on 2019–2020, and tested out-of-sample on 2021–2024 with zero data leakage.
+   Trained on 1951–2012 historical data, validated on 2012–2020, and tested out-of-sample on 2021–2024 with zero data leakage.
 
 ---
 
