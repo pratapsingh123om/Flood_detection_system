@@ -46,6 +46,28 @@ Built a high-resolution rainfall forecasting platform for Central India that ans
 2. **What is the localized flood and waterlogging risk?**  
    Evaluated using the IPCC Disaster Risk Framework (Hazard × Vulnerability × Exposure) weighted with AHP across 85 municipal wards and regional basins.
 
+### 🌊 Hydrological Flood Risk & Physical Terrain Engine
+
+The live dashboard couples the 7-day downscaled rainfall forecast with physical environmental indicators to compute real-time localized flood risk:
+
+1. **Flood-Risk Score (IPCC Framework, 0–100 scale):**
+   * Formulated as **Risk = Hazard × Vulnerability × Exposure**.
+   * **Hazard (H):** Driven by peak daily rainfall, multi-day wet sequences (Wet-day multiplier up to 1.84×), and USDA SCS-CN surface runoff.
+   * **Categorization:** Low (0–30), Moderate (31–60), High (61–80), Severe (81–100).
+
+2. **Terrain Vulnerability (USGS 30m SRTM DEM):**
+   * **Topographic Position Index (TPI):** Identifies physical valley sinks and depression hollows where gravity forces water to accumulate (TPI < 0 indicates depression basins prone to flash-ponding).
+   * **Slope Inversion Factor:** Flat plains have lower natural drainage velocity (Factor = 3.0 / [Slope + 0.5]), multiplying accumulation.
+   * **River Proximity:** Euclidean distance to stream channels (<200m assigns maximum vulnerability of 1.0; >1000m drops to 0.2).
+
+3. **Drainage Capacity & Evacuation Stress:**
+   * **SCS-CN Runoff Generation:** Uses Curve Number CN=88 (urban/compacted soils), with potential retention S=34.6 mm and initial abstraction Ia=6.9 mm. Net runoff is Q = (P - Ia)² / (P + 0.8S).
+   * **Conveyance Limits:** Calibrated against CPHEEO stormwater drainage norms (15–25 mm/hr).
+   * **Status Classification:** When forecast inflow exceeds stormwater discharge capacity (Q > C_drain), the indicator trips to **Stressed** (red), warning of surface ponding and sewer backflow.
+
+4. **Antecedent Soil Moisture:**
+   * Tracks rolling soil moisture saturation. High antecedent moisture leaves zero absorption capacity, converting nearly 100% of incremental rain into immediate runoff.
+
 3. **How were the underlying models trained and audited?**  
    Trained on 1951–2012 historical data, validated on 2012–2020, and tested out-of-sample on 2021–2024 with zero data leakage.
 

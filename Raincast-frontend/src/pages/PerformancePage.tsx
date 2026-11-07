@@ -92,6 +92,41 @@ export default function PerformancePage() {
           </table>
         </div>
 
+        <div style={{ marginTop: 40 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>Hydrological Flood & Drainage Capacity Engine</h2>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: 20 }}>
+            <p style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--ink-muted)', margin: '0 0 16px' }}>
+              The live flood-risk panel dynamically couples forecast rainfall with real-time physical indicators to compute localized flood hazard and stormwater network strain:
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+              <div style={{ padding: 16, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px', color: 'var(--teal)', fontSize: 16 }}>1. Live Flood-Risk Score (IPCC Framework)</h4>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-muted)', lineHeight: 1.5 }}>
+                  Formulated under the IPCC Disaster Risk standard: <strong>Risk = Hazard × Vulnerability × Exposure</strong> (scaled 0–100). The Hazard component is driven by forecasted peak rainfall and multi-day accumulation; Vulnerability integrates physical topography; Exposure accounts for built-up infrastructure and density.
+                </p>
+              </div>
+              <div style={{ padding: 16, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px', color: 'var(--teal)', fontSize: 16 }}>2. Terrain Vulnerability (SRTM DEM)</h4>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-muted)', lineHeight: 1.5 }}>
+                  Derived from 30m USGS SRTM elevation data. Uses <strong>Topographic Position Index (TPI)</strong> and slope inversion (<em>3.0 / [slope + 0.5]</em>) to identify low-lying valley sinks where water naturally converges. Also factors Euclidean distance to river drainage channels (&lt;200m = high vulnerability).
+                </p>
+              </div>
+              <div style={{ padding: 16, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px', color: 'var(--teal)', fontSize: 16 }}>3. Drainage Capacity & Conveyance</h4>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-muted)', lineHeight: 1.5 }}>
+                  Calculated using USDA SCS-CN (Curve Number <em>CN=88</em>, <em>S=34.6 mm</em>, <em>I<sub>a</sub>=6.9 mm</em>) against CPHEEO stormwater conveyance standards (15–25 mm/hr). When peak runoff surpasses pipe discharge capacity, status trips to <strong>Stressed</strong> (red).
+                </p>
+              </div>
+              <div style={{ padding: 16, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px', color: 'var(--teal)', fontSize: 16 }}>4. Antecedent Moisture Dynamics</h4>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-muted)', lineHeight: 1.5 }}>
+                  Tracks rolling 7-day soil moisture saturation. Wet ground conditions significantly reduce infiltration capacity, applying an escalation multiplier (up to 1.84×) to incoming precipitation runoff.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div style={{ marginTop: 40, padding: 20, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--teal)' }}>✓ Comprehensive Evaluation Complete</span>
           <p style={{ fontSize: 14, color: 'var(--ink-muted)', margin: '8px 0 0' }}>Seven-day forecasting and multi-criteria flood-risk models have been rigorously backtested against historical baseline data across Central India river basins (Narmada, Betwa, Chambal, Shipra), achieving strong spatiotemporal correlation.</p>
