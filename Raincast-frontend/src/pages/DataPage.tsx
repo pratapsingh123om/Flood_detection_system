@@ -41,6 +41,14 @@ export default function DataPage() {
                 <td style={{ padding: 12, fontWeight: 600 }}>ERA5 / ERA5-Land</td>
                 <td style={{ padding: 12 }}>Candidate humidity, dewpoint, wind, pressure, radiation, soil-moisture, and evaporation inputs</td>
               </tr>
+              <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: 12, fontWeight: 600 }}>75-Year GAN Downscaling</td>
+                <td style={{ padding: 12 }}>Physics-informed Generative Adversarial Network reconstructing high-resolution gridded precipitation fields (1950–2025)</td>
+              </tr>
+              <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: 12, fontWeight: 600 }}>2006+ Multi-Variable Window</td>
+                <td style={{ padding: 12 }}>Rich multi-channel meteorological feature tensor used to train the 7-day Spatio-Temporal U-Net forecasting model</td>
+              </tr>
             </tbody>
           </table>
         </div>

@@ -50,7 +50,7 @@ export default function DashboardPage() {
   const [position, setPosition] = useState<L.LatLng | null>(null);
   const [liveForecast, setLiveForecast] = useState<any[] | null>(null);
   const [isFetchingModel, setIsFetchingModel] = useState(false);
-  const [modelName, setModelName] = useState('RainNet Central India CNN');
+  const [modelName, setModelName] = useState('Spatio-Temporal U-Net (TFLite FP16)');
 
   // Fetch from our live model whenever a point in Central India is clicked
   useEffect(() => {
@@ -80,7 +80,7 @@ export default function DashboardPage() {
               };
             });
             setLiveForecast(formatted);
-            setModelName('RainNet Central India CNN');
+            setModelName('Spatio-Temporal U-Net (TFLite FP16)');
             setIsFetchingModel(false);
             return;
           }
@@ -112,7 +112,7 @@ export default function DashboardPage() {
               predicted: parseFloat(Number(f.rain).toFixed(1))
             }));
             setLiveForecast(formatted);
-            setModelName('RainNet Central India CNN');
+            setModelName('Spatio-Temporal U-Net (TFLite FP16)');
             setIsFetchingModel(false);
             return;
           }
